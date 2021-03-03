@@ -1,0 +1,98 @@
+\begin{thebibliography}{10}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\providecommand{\doi}[1]{https://doi.org/#1}
+
+\bibitem{Azab2016SKEE}
+Azab, A., Swidowski, K., Bhutkar, R., Ma, J., Shen, W., Wang, R., Ning, P.:
+  Skee: A lightweight secure kernel-level execution environment for arm. In:
+  Network and Distributed System Security Symposium (2016)
+
+\bibitem{Ben2007The}
+Ben-Yehuda, M., Day, M., Dubitzky, Z., Factor, M., Har'El, N., Gordon, A.,
+  Liguori, A., Wasserman, O., Yassour, B.A., Ben-Yehuda, M.: The turtles
+  project: Design and implementation of nested virtualization. Yehuda pp.~1--6
+  (2007)
+
+\bibitem{Deng2017Dancing}
+Deng, L., Liu, P., Xu, J., Chen, P., Zeng, Q.: Dancing with wolves: Towards
+  practical event-driven vmm monitoring. Acm Sigplan Notices  \textbf{52}(7),
+  83--96 (2017)
+
+\bibitem{Sprobes}
+Ge, X., Vijayakumar, H., Jaeger, T.: Sprobes: Enforcing kernel code integrity
+  on the trustzone architecture. Computer Science  \textbf{25}(6),  1793--1795
+  (2014)
+
+\bibitem{Klein2009SeL4}
+Klein, G., Elphinstone, K., Heiser, G., Andronick, J., Cock, D., Derrin, P.,
+  Elkaduwe, D., Kai, E., Kolanski, R., Norrish, M.: Sel4: Formal verification
+  of an os kernel. In: Acm Sigops Symposium on Operating Systems Principles
+  (2009)
+
+\bibitem{Lee2013KI}
+Lee, H., Moon, H., Jang, D., Kim, K., Lee, J., Paek, Y., Kang, B.H.: Ki-mon: a
+  hardware-assisted event-triggered monitoring platform for mutable kernel
+  object. In: Usenix Conference on Security. pp. 511--526 (2013)
+
+\bibitem{J2010TrustVisor}
+McCune, J.M., Li, Y., Qu, N., Zhou, Z.: Trustvisor: Efficient tcb reduction and
+  attestation. Cylab  \textbf{41}(3),  143--158 (2010)
+
+\bibitem{Moon2012Vigilare}
+Moon, H., Lee, H., Lee, J., Kim, K., Paek, Y., Kang, B.B.: Vigilare: toward
+  snoop-based kernel integrity monitor. In: ACM Conference on Computer and
+  Communications Security. pp. 28--37 (2012)
+
+\bibitem{Petroni2007Automated}
+Petroni, N.L., Hicks, M.: Automated detection of persistent kernel control-flow
+  attacks. In: ACM Conference on Computer and Communications Security. pp.
+  103--115 (2007)
+
+\bibitem{zhaobudao}
+Saltzer~J, S.M.: The protection of information in computer systems. Proceedings
+  of the IEEE  \textbf{63}(9),  1278--1308 (1975)
+
+\bibitem{nexen}
+Shi, L., Wu, Y., Xia, Y., Dautenhahn, N., Chen, H., Zang, B., Guan, H., Li, J.:
+  Deconstructing xen. In: Network and Distributed System Security Symposium
+  (2017)
+
+\bibitem{Steinberg2010NOVA}
+Steinberg, U., Kauer, B.: Nova:a microhypervisor-based secure virtualization
+  architecture. In: European Conference on Computer Systems, Proceedings of the
+  European Conference on Computer Systems, EUROSYS 2010, Paris, France, April.
+  pp. 209--222 (2010)
+
+\bibitem{Wang2010HyperCheck}
+Wang, J., Stavrou, A., Ghosh, A.: Hypercheck: a hardware-assisted integrity
+  monitor. In: International Conference on Recent Advances in Intrusion
+  Detection. pp. 158--177 (2010)
+
+\bibitem{Wang2015SecPod}
+Wang, X., Chen, Y., Wang, Z., Qi, Y., Zhou, Y.: Secpod: a framework for
+  virtualization-based security systems. In: Usenix Conference on Usenix
+  Technical Conference. pp. 347--360 (2015)
+
+\bibitem{Wang2010HyperSafe}
+Wang, Z., Jiang, X.: Hypersafe: A lightweight approach to provide lifetime
+  hypervisor control-flow integrity. In: Security and Privacy. pp. 380--395
+  (2010)
+
+\bibitem{hyperlock}
+Wang, Z., Wu, C., Grace, M., Jiang, X.: Isolating commodity hosted hypervisors
+  with hyperlock. In: Proceedings of the 7th ACM european conference on
+  Computer Systems. pp. 127--140 (2012)
+
+\bibitem{dehy}
+Wu, C., Wang, Z., Jiang, X.: Taming hosted hypervisors with (mostly)
+  deprivileged execution. In: 20th Annual Network and Distributed System
+  Security Symposium, {NDSS} 2013, San Diego, California, USA, February 24-27,
+  2013 (2013)
+
+\bibitem{Zhang2011CloudVisor}
+Zhang, F., Chen, J., Chen, H., Zang, B.: Cloudvisor: retrofitting protection of
+  virtual machines in multi-tenant cloud with nested virtualization. In: ACM
+  Symposium on Operating Systems Principles. pp. 203--216 (2011)
+
+\end{thebibliography}

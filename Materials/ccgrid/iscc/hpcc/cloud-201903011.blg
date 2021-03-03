@@ -1,0 +1,7 @@
+This is BibTeX, Version 0.99dThe top-level auxiliary file: cloud-201903011.aux
+The style file: splncs04.bst
+Database file #1: ref.bib
+A bad cross reference---entry "WuLLCZG18"
+refers to entry "DBLP:conf/hpca/2018", which doesn't exist
+Warning--I didn't find a database entry for "DBLP:conf/hpca/2018"
+(There was 1 error message)

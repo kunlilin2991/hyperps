@@ -1,0 +1,30 @@
+\begin{thebibliography}{1}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\providecommand{\doi}[1]{https://doi.org/#1}
+
+\bibitem{Champagne2010Scalable}
+Champagne, D., Lee, R.B.: Scalable architectural support for trusted software.
+  In: HPCA - 16 2010 The Sixteenth International Symposium on High-Performance
+  Computer Architecture. pp. 1--12 (2010)
+
+\bibitem{Chhabra2011SecureME}
+Chhabra, S., Rogers, B., Yan, S., Prvulovic, M.: Secureme:a hardware-software
+  approach to full system security. In: International Conference on
+  Supercomputing. pp. 108--119 (2011)
+
+\bibitem{Evtyushkin2015Iso}
+Evtyushkin, D., Elwell, J., Ozsoy, M., Ponomarev, D., Ghazaleh, N.A., Riley,
+  R.: Iso-x:a flexible architecture for hardware-managed isolated execution.
+  In: Ieee/acm International Symposium on Microarchitecture. pp. 190--202
+  (2015)
+
+\bibitem{WuLLCZG18}
+Wu, Y., Liu, Y., Liu, R., Chen, H., Zang, B., Guan, H.: Comprehensive {VM}
+  protection against untrusted hypervisor through retrofitted {AMD} memory
+  encryption. In: {IEEE} International Symposium on High Performance Computer
+  Architecture, {HPCA} 2018, Vienna, Austria, February 24-28, 2018. pp.
+  441--453 (2018). \doi{10.1109/HPCA.2018.00045},
+  \url{https://doi.org/10.1109/HPCA.2018.00045}
+
+\end{thebibliography}

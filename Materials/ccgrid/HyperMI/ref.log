@@ -1,0 +1,53 @@
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (MiKTeX 2.9) (preloaded format=pdftex 2018.8.8)  21 AUG 2018 18:43
+entering extended mode
+**C:/Users/juku/Desktop/llncs/ref.bib
+(C:/Users/juku/Desktop/llncs/ref.bib
+Overfull \hbox (13.77371pt too wide) in paragraph at lines 2--24
+\tenrm tle=Secure vir-tual ar-chi-tec-ture:a safe ex-e-cu-tion en-vi-ron-ment f
+or com-mod-ity op-er-at-ing sys-tems, au-thor=Criswell,|
+
+\hbox(6.94444+1.94444)x469.75499, glue set - 1.0
+.\tenrm t
+.\tenrm l
+.\tenrm e
+.\tenrm =
+.\tenrm S
+.etc.
+
+
+Overfull \hbox (1.14882pt too wide) in paragraph at lines 25--46
+\tenrm thor=Garfinkel, T, jour-nal=Proc.network & Dis-tributed Sys-tems Se-cu-r
+ity Symp, pages=191--206, year=2003,|
+
+\hbox(6.94444+1.94444)x469.75499, glue set - 1.0
+.\tenrm t
+.\tenrm h
+.\tenrm o
+.\tenrm r
+.\tenrm =
+.etc.
+
+
+Overfull \hbox (15.30157pt too wide) in paragraph at lines 71--87
+\tenrm ments for se-cure in-tru-sion de-tec-tion, au-thor=Kourai, Kenichi and C
+hiba, Shigeru, book-ti-tle=Proc of Acm/usenix|
+
+\hbox(7.5+2.5)x469.75499, glue set - 1.0
+.\tenrm m
+.\tenrm e
+.\tenrm n
+.\kern-0.27779
+.\tenrm t
+.etc.
+
+! Undefined control sequence.
+l.140 howpublished = {\url
+                          {http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE...
+
+? 
+! Emergency stop.
+l.140 howpublished = {\url
+                          {http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE...
+End of file on the terminal!
+
+!  ==> Fatal error occurred, no output PDF file produced!

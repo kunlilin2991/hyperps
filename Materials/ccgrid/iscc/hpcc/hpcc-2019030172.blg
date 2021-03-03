@@ -1,0 +1,11 @@
+This is BibTeX, Version 0.99dThe top-level auxiliary file: hpcc-2019030172.aux
+The style file: splncs04.bst
+Database file #1: ref.bib
+A bad cross reference---entry "hilps"
+refers to entry "DBLP:conf/ndss/2017", which doesn't exist
+A bad cross reference---entry "dehy"
+refers to entry "DBLP:conf/ndss/2013", which doesn't exist
+Warning--I didn't find a database entry for "DBLP:conf/ndss/2013"
+Warning--I didn't find a database entry for "DBLP:conf/ndss/2017"
+Warning--empty booktitle in Detangling
+(There were 2 error messages)

@@ -1,0 +1,87 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{HyperPS: A VMM Monitoring Approach Based on Privilege Separation}
+\iffalse
+%1\textsuperscript{st}
+\author{\IEEEauthorblockN{Wenqing Liu,Kunli Lin,Song Wei,Kun Zhang,Bibo Tu}
+\IEEEauthorblockA{\textit{Institute of Information Engineering, Chinese Academy of Sciences} \\
+\textit{School of Cyber Security, University of Chinese Academy of Sciences}\\
+%\{xxx\}@iie.ac.cn}%
+\{liuwenqing,linkunli,zhangkun,tubibo\}@iie.ac.cn}
+}
+\fi
+\maketitle
+
+\begin{abstract}
+
+Privilege separation has long been considered as a fundamental principle in software design to mitigate the potential damage of a security attack. Much effort has been given to develop various privilege separation schemes where a monolithic OS or hypervisor is divided into two privilege domains where one domain is logically more privileged than the other even if both run at an identical processor privilege level.
+
+However, as malware and attacks increase against virtually every level of privileged software including
+an OS and a hypervisor, we have been motivated to develop a technique, named as HyperPS, to realize true privilege separation in hypervisor on x86. HyperPS does not rely on hardware or a higher privileged software. 
+The key of HyperPS is that it decouples the functions of interaction between VM and the hypervisor. As a result, HyperPS monitors the interaction, monitors memory mapping when a page is allocated, and resists system information leakage attack.
+We have implemented a prototype for KVM hypervisor on x86 platform with multiple VMs running Linux. KVM with HyperPS can be applied to current commercial cloud computing industry with portability. The security analysis shows that this approach can provide effective monitoring against compromised attack, and the performance evaluation confirms the efficiency of HyperPS.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Virtualization, VM Protection, VM Security
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+A variety of system software such as an operating system (OS) and vitrual machine monitor (VMM) has a monolithic design, which integrates its core services into one huge code base, thereby encompassing them all in a single address space and executing them in the same processor privilege level (i.e., ring 0 and VMX-root modes in Intel x86 or svc and hyp modes in ARM). 
+
+As more and more functionalities are added into OS and the VMM, the code bases of commodity them have been increased to be larger. Larger code base  size consequently increases the risk of having security vulnerabilities. 
+Take the VMM as an example, from 2004 to now, there are 130 vulnerabilities about KVM.
+%Some of them (e.g., CVE-2018-1087)\ref{} shows high-risk vulnerabilities that can lead to privilege raising behavior and comprehensive compromised VMM.
+ Because hypervisor possesses the highest privilege in the cloud environment, attackers who compromise hypervisor can harm the whole cloud infrastructure and endanger data and computation in the system.
+Therefore, vulnerabilities residing in a fraction of system software can be easily exploited to subvert other parts of or the whole system.
+Privilege separation stemming from the work of \textbf{Saltzer and Schroeder}\ref{} has been considered as a fundamental principle in software design that can remove such a security concern.
+
+%系统中的代码越来越多，攻击面越大，同权限的系统组件，一旦被攻击会对系统中的其余部分造成影响，所以需要做权限分离。
+
+The attackers aiming to manipulate system resources and take over the control of a system have been able to compromise each and every level of system software.
+In order to reduce the threat to other components or the whole system caused by the attackers, enforce this security principle in the design, current researchers achieve privilege separation by creating more privileged software or introducing hardware.
+
+\textbf{Hardware}
+Some efforts (SecureME\cite{Chhabra2011SecureME}, Bastion\cite{Champagne2010Scalable} and Iso-x\cite{Evtyushkin2015Iso}) rely on 
+customized underlying hardware to provide fine-grained protection for VM or in-VM process. 
+Iso-X provides isolation for security-critical pieces of an application by introducing additional hardware and changes to OS. It controls memory access by introducing ISA instructions. 
+Bastion uses modified microprocessor hardware based on FPGA to protect the storage and runtime memory state of enhanced hypervisor against both software and hardware attacks. So that it provides hardware-protected environment and protection for security-critical OS and application modules in an untrusted software stack.
+Different hardware platforms provide different hardware mechanisms,such as Intel's Software Guard Extensions (SGX) \cite{WuLLCZG18}. 
+%and AMD's Secure Memory Encryption (SME).
+SGX provides protection for pieces of application logic inside encrypted enclave memory against malicious OS. However, it is limited to protect a relatively small portion
+of memory, and the developers have to mostly reconstruct the protected software or build it from scratch. Therefore it is nontrivial for SGX to protect large-scale software like the entire VM. 
+
+\textbf{Reorganization System}
+%一些工作通过将物理资源访问权限进行分离，从而避免被攻击的内核或者虚拟机监控器的恶意访问。这些工作主要是给每个虚拟机预分配固定的物理核和内存来管理对敏感信息的访问权限。
+Some works  (NoHype\cite{NoHype} and TrustOSV\cite{TrustOSV}) avoids malicious access to the attacked kernel or virtual machine monitor by separating the access privilege of physical resources. These tasks are mainly to pre-allocate a fixed physical core and memory to each VM to manage access to sensitive data. NoHype removes most of virtualization functions form VMM  while retaining the key features enabled by virtualization and prepares packup for each VM.
+
+\textbf{Nested VMM or Kernel}
+In order to mitigate the hazard caused by the hypervisor, plenty of software solutions propose and introduce a higher privilege-level than the original hypervisor. Nested virtualization is one of the representative approaches, which provides a higher-privileged and isolated execution environment to run the monitor securely. The turtles project \cite{Ben2007The} and CloudVisor \cite{Zhang2011CloudVisor} are examples of systems that propose nested virtualization idea to achieve isolation for protected resources. Especially, CloudVisor uses nested virtualization to decouple resource management into the nested hypervisor to protect VMs.
+
+
+
+\section{Conclusion}\label{sec:conclusion}
+
+
+
+%
+%\bibliographystyle{splncs04} 
+%\bibliography{ref}
+%\end{document}
+
+
+
+
+
+
