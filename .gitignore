@@ -1,0 +1,10 @@
+*.swp
+Latex/Tex/*.swp
+Latex/*.swp
+bare_jrnl_compsoc.aux
+bare_jrnl_compsoc.log
+bare_jrnl_compsoc.pdf
+
+Materials/.~lock.Threat Model-SecureVM.vsd#
+
+

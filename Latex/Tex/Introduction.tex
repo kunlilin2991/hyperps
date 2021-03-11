@@ -1,0 +1,124 @@
+\section{Introduction}%
+\label{sec:introduction}
+
+\iffalse
+######################
+### 第一段写作材料 ###
+######################
+HostOS在虚拟化之前还需要实现大量的kernel subsystem(components) 如processing, memory, storage, and network capacity 更不要说要引入大量的LKM 这无疑极大的增加了hypervisor被危害的可能性。
+All hypervisors need some operating system-level components—such as a memory manager, process scheduler, input/output (I/O) stack, device drivers, security manager, a network stack, and more—to run VMs.
+It consists of a loadable kernel module, kvm.ko, that provides the core virtualization infrastructure and a processor specific module, kvm-intel.ko or kvm-amd.ko.
+
+The linux kernel provides not only provides the core virtualization infrastructure but also some operating system components - such as memory manager, process scheduler, device drivers, security manager, and more.
+
+% 在KVM虚拟化环境中，HostOS不仅要
+在XEN环境中，hostos是啥，其主要就是下面的hypervisor，是否包括demo0？应该是不包括的。所以，在XEN环境中,HOSTOS的功能很简单，并不需要很多其他的功能，因此，我们的论文应该限定在KVM的环境中。
+要不要提QMEU？不需要，因为KVM可以跟上面很多的软件构成虚拟化环境，但是无论如何都存在一个hostos，这个是由于KVM是一个内核模块的形式存在的原因，导致其还有很多其他的功能和模块。所以，这里只需要提KVM。
+
+在KVM-based的vir环境中，hostos不仅含有核心的虚拟化组件(KVM)还含有大量的其他的kernel功能，如驱动设备 安全管理等。大量与虚拟化无关的组件，特别是drivers，提供了大量可被exploit的脆弱点。因为KVM是以内核模块存在的，所以，任何一个成功的对内核的exploit特别是提权攻击会导致整个虚拟化环境被攻陷。
+ By adding virtualization capabilities to a standard Linux kernel, the virtualized environment can benefit from all the ongoing work on the Linux kernel itself.
+
+#####################
+### 第一段材料end ###
+#####################
+
+\fi
+
+Integrating the hypervisor capabilities into a standard Linux kernel, the KVM-based virtualized environment not only benefits from all the ongoing work on the Linux kernel itself but also shares countless vulnerabilities with it. A successful exploit, especially privilege escalation exploit, to the Linux kernel will also subvert the entire virtualization environment. 
+Researchers have proposed a lot of schemes to mitigate such a security concern. 
+% A lot of works have been proposed to mitigate such a security concern.
+
+% 将hypervisor功能整合到内核中，KVM虚拟化环境在获取了与内核同步的发展的优势的同时也不可避免的与内核共同面临相同的安全威胁。一个成功的针对内核的攻击，特别是提权攻击，同样会使得整个虚拟化环境被攻陷。研究者已经提出了大量的方案来解决整个安全问题。
+
+% \paragraph{Hardware-assisted Schemes}%
+% \label{par:hardware}
+Hardware facilities such as Memory Protection eXtensions(MPX), Encryption Instructions(AES-NI), Software Guard eXtensions(SGX), Secure Memory Encryption(SME) provide efficient memory isolation. These hardware facilities have already been actively used by researchers to separate the HostOS kernel components and the hypervisor component. 
+% However, these schemes are limited to separate just a small portion of the hypervisor component.
+% However, the strong memory isolation makes the access to the partition application to be strictly restricted.
+However, most of these hardware facilities restrict the access to the partition application to a narrow interface.
+% However, access to the partition application in the protected memory has been strictly restricted with limited interfaces.
+That makes it to be extremely tough to leverage these hardware facilities to separate the entire virtualization component from the kernel. Furthermore, most of these hardware facilities need the developer to reconstruct their protected application or build it from scratch. 
+% \paragraph{Reconstruct Hypervisor}%
+% \label{par:reconstruct_hypervisor}
+Some schemes propose to separate the virtualization component from the rest of the kernel by reconstructing the HostOS or Hypervisor.
+Microhypervisor advocates that the hypervisor should only be responsible for core virtualization privileges to reduce its interaction with the kernel. For example, Trustvisor and Nova adopt microhypervisor to achieve virtualization privilege separation and memory protection. 
+Nested virtualization is another representative approach. 
+Nested virtualization, such as CloudAuditor, Nosv, and the Turtles Project, introduces a higher privilege level and isolated execution environment beyond the original hypervisor. 
+Thus, separated privileges in the nested virtualization environment can no long be subverted by the original one. For example, CloudVisor proposed to use nested virtualization ro decouple resource management component into a nested hypervisor. 
+Nevertheless, These schemes has been deemed unrealistic for the cloud providers in that cloud providers could not reconstruct their cloud architecture, let along the significant performance losses introduced by nested virtualization.
+
+\iffalse
+################################
+###### 关于以往方案的描述 ######
+################################
+但是这些功能往往提供的是一个相对封闭的运行环境，其与外界的交互是十分受限的。
+对在被这些硬件包括的区域中的代码和数据的访问是十分受限的，
+并不能满足将整个虚拟化环境相关特权分离的环境要求。此外，这些硬件特性需要研发者重新设计他们的软件架构甚至是逻辑。
+% apply different memory protection
+
+% Thus, researchers separate some privileges into the nested hypervisor.
+% . Nested virtualization
+% These schemes
+% reconstruct the Hypervisor
+% 还有一些方案通过重构hypervisor来modularizing核心功能。一些方案提出使用microhypervisor的方式。另外一些方案则通过嵌套虚拟化引入更高的特权，将部分hyper的特权分离到一个更高的执行空间中。
+% 嵌套虚拟化是另外一个具有代表性的方案，这些方案利用虚拟化会将特权分离的特点，将原本内核负责的虚拟化权限分离。
+################################
+###### 关于以往方案的描述 ######
+################################
+
+\fi
+In this paper, we introduce a novel scheme, named HyperPS, to implement hypervisor monitoring based on privilege separation without relying on any special hardware or reconstructing the hypervisor. The key idea of HyperPS is to separate the core virtualization privileges from the HostOS kernel, so that the security of virtual machines can be strongly protected, even if the HostOS/hypervisor has been compromised.
+Virtual Machine Control Structure (VMCS) is the most important core structure in virtualization environment. It manages transitions into and out of virtual-machine extensions (VMX) non-root operations (VM entries and VM exits) as well as processor behavior in VMX non-root operation. In traditional virtualization architecture, the VMCS can only be accessed and managed by the HostOS/Hypervisor.
+If the HostOS/Hypervisor has been subverted, any execution of the guest virtual machine will no longer be safe. For example, the adversary can redirect the execution of guest virtual machine to a unpredictable position by writing the \verb|rip| in guest-state area field in VMCS.
+The Extended Page-Table (EPT) is used to support the virtualization of physical memory. When EPT is in use, guest-physical addresses are translated by traversing a set of EPT paging structures to produce physical addresses that are used to access memory. Everything in the guest virtual machine`s memory cannot be safe if the HostOS/Hypervisor has been compromised. For example, a compromised HostOS/Hypervisor could remap one guest physical page frame to another physical page frame that holds the malicious code.
+In this paper, HyperPS separates the privilege of managing these two structures: VMCS and EPT, from the HostOS/Hypervisor into an isolated execution environment. Any access during VM exit (any VMX root operation) to these two structures will be hooked and be redirected to the isolated execution environment. Code in the original HostOS/Hypervisor environment can no longer read or write VMCSs and EPTs directly. 
+
+
+% in VMX root operation
+
+\iffalse
+##############################
+##### 关于我们工作的材料 #####
+##############################
+Virtual Machine Control Structure (VMCS) is the most important core structure in virtualization environment which is completely under the charge of the HostOS/Hypervisor. The VMCS manages transitions into and out of virtual-machine extensions (VMX) non-root operations (VM entries and VM exits) as well as processor behavior in VMX non-root operation. If the HostOS/Hypervisor has been subverted, the execution environment of guest VM will no longer be 
+A compromised HostOS/Hypervisor can 
+All management operations to the guest-VM are recorded in this structure.
+The Extended Page-Table (EPT) is used to support the virtualization of physical memory. When EPT is in use, guest-physical addresses are translated by traversing a set of EPT paging structures to produce physical address that are used to access memory.
+如果vmcs被篡改了，会对vm产生什么影响。
+在一个虚拟化环境中，VMCS是干啥的，EPT是干啥的，讲出来，any virtualization operation 都将映射到这两个数据结构上，因此，我们将hostos对这两个结构体操作的权限从原本的内核中剥离
+% the compromised HostOS/Hypervisor cannot subvert the virtual machines
+从而使得已经被危害的hostOS无法通过虚拟化技术危害虚拟机。
+
+上面讲了要做的是什么即权限分离，那么下面要写为什么要将VMCS EPT作为权限分离的根本，为什么这两个要放到隔离空间中去
+% ，下面就要写为什么
+, and replace these privileges into a dedicated space which can not be access by the HostOS anymore. 
+
+##############################
+##### 关于我们工作的材料 #####
+##############################
+
+\fi
+
+We have implemented a full funtional prototype based on the KVM in Intel x86\_64 architecture. Our prototype modified 300 SLOC (Source Lines of Code) of the original Linux kernel and introduced about 4K SLOC code. The expermental results show a trivial performance overhead. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
