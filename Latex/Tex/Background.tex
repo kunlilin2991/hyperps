@@ -1,0 +1,61 @@
+\section{Background}%
+\label{sec:background}
+
+\subsection{QEMU-KVM}%
+\label{sub:qemu_kvm}
+QEMU is a generic and open source machine emulator and virtualizer. QEMU can use other hypervisor like \verb|Xen| or KVM to use CPU extensions for virtualization. When used as a virtualizer, QEMU achieves near native performances by executing the guest code directly on the host CPU.
+Kernel-based Virtual Machine (KVM) is an open source virtualization technology that converts Linux into a type-1 (bare-metal) hypervisor. KVM is a part of the Linux kernel that shares all the linux kernel's operating system-level componets -such as the memory manager, process scheduler, security manager, and more to run VMs. Every VM is implemented as a regular Linux process, shceduled by the standard Linux scheduler, with dedicated virtual hardware like a network card, memory, and disks. KVM mainly consists of a loadable kernel module, kvm.ko, that provides the core virtualization infrastructure and a processor specific module, kvm-intel.ko or kvm-amd.ko.
+In virtualization environment, KVM does not work on its own. It is only an API provided by the kernel for userspace. End users typically use KVM throgh QEMU where it is present as an acceleration method.
+For the QEMU-KVM architecture, KVM interacts with QEMU (QEMU runs at the user space) in two ways: through device file \verb|/dev/kvm| and through memory mapped pages
+% KVM interacts with user space - in most case QEMU - in two ways: through device file \verb|/dev/kvm| and through memory mapped pages.
+Memory mapped pages are used for bulk transfer of data between QEMU and KVM. \verb|/dev/kvm| is the main API exposed by KVM. It supports a set of \verb|ioctl|s which allow QEMU to manage VMs and interact with them.
+% 怎么引出HostOS的问题
+% Since KVM is a part of the linux kernel, the Linux and the QEMU
+% leverages the linux kernel's system-level
+
+
+
+\subsection{VMCS}%
+\label{sub:vmcs}
+Virtual-machine Control Structure is a data structure used in Virtual Machine eXtensions (VMX). It controls VMX non-root operations (guest virtual machine execution operations) and VMX transitions. Access to the VMCS is managed through the VMCS pointer (one per logical processor). The VMCS pointer is read and written suing the instructions \verb|VMPTRST| and \verb|VMPTRLD|. In general, the hypervisor configures a VMCS using \verb|VMREAD|, \verb|VMWRITE|, and \verb|VMCLEAR| instructions. A hypervisor could use a different VMCS for each virtual machine that it supports. For a virtual machine with multiple logical processor, the hypervisor could use a different for each logical processor. A logical processor may also maintain a number of VMCSs that are active, however, at any given time, at most one of the active VMCSs is the \textbf{current} VMCS. VMX instructions operate only on the \textbf{current} VMCS. 
+
+A compromised HostOS/hypervisor can force the guest virtual machine exit by tramper VM-Execution Control fields and VM-exit control fields in VMCS and tramper the guest virtual machine by writing Guest-State Area fields. 
+
+% 一个被危害的hypervisor可以强迫虚拟机退出，并通过篡改其vmcs中的field等信息实现对guest VM 的危害。
+
+% \subsection{Second Level Address Translation}%
+% \label{sub:second_level_address_translation}
+% Second Level Address Translation (SLAT) is a hardware-assisted virtualization technology which makes it possible to quick manage the physical memory without lots of VM exits. Extended Page Table (EPT) is the intel's implementation of SLAT, while ARM names its implementation as Stage-2 Page-tables.
+
+
+\subsection{EPT}%
+\label{sub:ept}
+Intel implements it Second Level Address Translation (SLAT) as Extended Page Table (EPT). 
+EPT allows each virtual machine to manage its page table (not the EPT), without giving access to the underlying host machine's MMU Hardware. Thus, EPT reduces the need for hypervisor to keep syncing the shadow pages eliminating the overhead.
+If EPT is enabled, guest-physical addresses are translated by traversing a set of EPT paging structures to produce physical addresses that are used to access memory.
+In addition to translating a guest-physical address to a physical address, EPT specifies the privileges that software is allowed when accessing the address. Attempts at disallowed accesses are called EPT violations and cause VM exits.
+
+A compromised HostOS/hypervisor could tramper EPT paging structures so that the virtual machine will execute arbitrary malicious code without knowing it. 
+Moreover, a compromised HostOS/Hypervisor could access any data in the guest virtual machine with the help of virtual machine introspection.
+
+% the mapping relationship
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
