@@ -57,7 +57,10 @@
 % \documentclass[10pt,journal,compsoc]{../sty/IEEEtran}
 
 
-
+\usepackage{arydshln}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage[justification=centering]{caption}
 
 
 % Some very useful LaTeX packages include:
@@ -511,6 +514,7 @@ Computer Society, IEEE, IEEEtran, journal, \LaTeX, paper, template.
 
 \input{Tex/Introduction.tex}
 \input{Tex/Background.tex}
+\input{Tex/Panorama.tex}
 % \IEEEtriggercmdraisesectionheading{\section{Introduction}\label{sec:introduction}}
 % Computer Society journal (but not conference!) papers do something unusual
 % with the very first section heading (almost always called "Introduction").
@@ -751,6 +755,8 @@ H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
 %\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{mshell}}]{Michael Shell}
 % or if you just want to reserve a space for a photo:
 
+\iffalse
+
 \begin{IEEEbiography}{Michael Shell}
 Biography text here.
 \end{IEEEbiography}
@@ -768,6 +774,7 @@ Biography text here.
 Biography text here.
 \end{IEEEbiographynophoto}
 
+\fi
 % You can push biographies down or up by placing
 % a \vfill before or after them. The appropriate
 % use of \vfill depends on what kind of text is
