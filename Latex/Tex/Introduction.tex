@@ -40,7 +40,7 @@ However, most of these hardware facilities restrict the access to the partition 
 That makes it to be extremely tough to leverage these hardware facilities to separate the entire virtualization component from the kernel. Furthermore, most of these hardware facilities need the developer to reconstruct their protected application or build it from scratch. 
 % \paragraph{Reconstruct Hypervisor}%
 % \label{par:reconstruct_hypervisor}
-Some schemes propose to separate the virtualization component from the rest of the kernel by reconstructing the HostOS or Hypervisor.
+There are also some schemes that propose to separate the virtualization component from the rest of the kernel by reconstructing the HostOS or Hypervisor.
 Microhypervisor advocates that the hypervisor should only be responsible for core virtualization privileges to reduce its interaction with the kernel. For example, Trustvisor and Nova adopt microhypervisor to achieve virtualization privilege separation and memory protection. 
 Nested virtualization is another representative approach. 
 Nested virtualization, such as CloudAuditor, Nosv, CloudViosr-D\cite{mi2020mostly}, and the Turtles Project, introduces a higher privilege level and isolated execution environment beyond the original hypervisor. 
