@@ -15,7 +15,6 @@ Before digging into the details of HyperPS, we first give a panorama view of our
 \end{figure*}
 
 \subsection{Motivation} \label{sub:motivation}
-In this section, we discuss the motivations of why we need to protect VMs over an untrusted HostOS/Hypervisor.
 
 \iffalse
 #######################
@@ -35,7 +34,15 @@ The motivation for this work derives directly from
 这部分要写什么？怎么写？
 要按照这个逻辑来写：首先最开始用几句话说明云服务提供商最重要的任务是保证上面组会的安全，这是其需要负责的责任。然后需要论证hostos是不安全的，在这个条件下，其云系统可能被危害，一旦HOSTOS被危害，那么就无法保证上面VM的安全，立脚点一定是站在云服务提供商的角度上。最后自然而然的引出我们的motivation，就是如何在hostos被危害的前提条件下，云服务提供商如何保证虚拟机的安全。
 \fi
+In this section, we discuss the motivations of why we need to protect VMs over an untrusted HostOS/Hypervisor.
 
+\iffalse
+云服务商需要向云租户提供的众多服务中，能保证虚拟机的完整性和安全性是是其获取用户信任的关键因素。
+对于每一台虚拟机，云服务提供商需要保证用户虚拟机的运行不会被侵害，其运算不会被恶意篡改，其数据不会被盗取。对于同属一个平台的不同服务器之间，云服务提供商需要保证不同虚拟机之间的有效隔离。但是，在QEMU-KVM架构中，
+\fi
+
+中的一项就是其
+就是其虚拟机的完整性和安全性。
 
 
 
