@@ -1,7 +1,8 @@
 \section{Panorama} \label{sec:panorama}
 %在我们深入讲解我们的系统之前，我们首先给出一个我们整个系统的全景图，如图1所示。这张全景图在一张图内尽可能详细的描述了我们尝试解决可什么问题以及如何解决了这个问题。
 
-Before digging into the details of HyperPS, we first give a panorama view of our system, as depicted in Figure \ref{pic:panorama}. This panorama sketches in detail what problem we tried to solve and how we solve it.
+Before digging into the details of HyperPS, we first give a panorama view of our system, as depicted in Figure \ref{pic:panorama}. This figure sketches in detail what problem we tried to solve and how we solve it.
+In this section, we first elaborate on our motivation to protect VMs under a compromised HostOS/Hypervisor. Then, we explain some necessary background for a better understanding to Figure \ref{pic:panorama} and HyperPS. Finally, we present our threat model.
 
 %要在标题上对整个系统进行简单说明，既然是全景图，那么就应该包括如下的几点：要干什么，这个要最开始说，就一句话，说明我们要干什么，在这里就是如何在Hypervisor已经被危害的情况下如何保护guestVM的安全。这样就不需要说明威胁模型了，因为上面已经说了，是在Hypervisor已经被危害的前提下，就概括了图左边的内容；简要说明架构，这里要突出两个东西，一个是同层隔离，一个是将VMCS EPT移除到新的空间中。这个也是本文的两个最主要的东西，前者同层隔离提一句，要不要说好处呢？用修饰词把。后面VMCS，写效果，即VMCS移除以后会有什么效果，这个也是我们的最终的目的。
 %HperPS利用内核页表构造一个与HostOS Hypervisor具有相同特权级的空间，并剥夺了原有内核对VMCS EPT的管理的特权，并将对应的特权赋予在隔离空间的Secure Code。
@@ -34,16 +35,62 @@ The motivation for this work derives directly from
 这部分要写什么？怎么写？
 要按照这个逻辑来写：首先最开始用几句话说明云服务提供商最重要的任务是保证上面组会的安全，这是其需要负责的责任。然后需要论证hostos是不安全的，在这个条件下，其云系统可能被危害，一旦HOSTOS被危害，那么就无法保证上面VM的安全，立脚点一定是站在云服务提供商的角度上。最后自然而然的引出我们的motivation，就是如何在hostos被危害的前提条件下，云服务提供商如何保证虚拟机的安全。
 \fi
-In this section, we discuss the motivations of why we need to protect VMs over an untrusted HostOS/Hypervisor.
 
 \iffalse
+##############################
+##### Motivation中文初稿 #####
+##############################
 云服务商需要向云租户提供的众多服务中，能保证虚拟机的完整性和安全性是是其获取用户信任的关键因素。
-对于每一台虚拟机，云服务提供商需要保证用户虚拟机的运行不会被侵害，其运算不会被恶意篡改，其数据不会被盗取。对于同属一个平台的不同服务器之间，云服务提供商需要保证不同虚拟机之间的有效隔离。但是，在QEMU-KVM架构中，
+对于每一台虚拟机，云服务提供商需要保证用户虚拟机的运行不会被侵害，其运算不会被恶意篡改，其数据不会被盗取。对于同属一个平台的不同服务器之间，云服务提供商需要保证不同虚拟机之间的有效隔离。但是，在QEMU-KVM架构中，作为HostOS的Linux不仅仅是一个负责提供虚拟化服务的hypervisor，还是一个正常的操作系统。
+% HostOS在除了负责虚拟化相关核心功能之外，还是一个
+即使云服务商采用定制的精简的Linux作为hostos，其仍然含有大量的与虚拟化功能无关的各种子系统subsystem，而这些功能，特别是来源复杂的内核驱动等不可避免的含有大量的可以被利用的内核脆弱点。这就提供给了攻击者一个巨大的攻击面surface，即使攻击者没有找到可以利用的QEMU/KVM脆弱点，其仍然可以通过exploit Linux其他subsystem的脆弱点实现对虚拟化部分的危害。云服务提供商并不能有效的保证Linux subsystem 特别是大量驱动设备的安全性，因此，云服务提供商需要进一步思考如何在hostos已经被危害的前提下保证虚拟机的安全，这就是HyperPS的motivation。
 \fi
 
-中的一项就是其
-就是其虚拟机的完整性和安全性。
+In this section, we discuss the motivations of why we need to protect VMs under an untrusted HostOS/Hypervisor.
 
+Among the many services that cloud service providers need to provide to cloud tenants, ensuring the integrity and security of virtual machines is the key factor in gaining user trust. For each VM, the cloud service provider needs to ensure that the user's business in the VM will not be maliciously tampered with, and the data will not be stolen. For different VMs, cloud service providers need to ensure effective isolation between different VMs. However, in the QEMU-KVM architecture, Linux as HostOS is not only a hypervisor that is responsible for providing virtualization services, but also a normal operating system with full functions. In a real business deployment, even if cloud service providers adopt customized Linux as the HostOS, the Linux kernel still contains a large number of various subsystems that have nothing to do with virtualization. These subsystems, especially kernel drivers with complex sources, inevitably contain countless exploitable vulnerabilities. These subsystems provide the attacker with a huge attack surface. Even if the attacker does not find any exploitable QEMU or KVM vulnerabilities, he can still tamper with the virtualization component by exploiting the vulnerabilities of other Linux subsystems. Therefore, cloud service providers need a further think about how to ensure the security of VMs under the premise that the HostOS/Hypervisor has been compromised. This is the motivation of our HyperPS.
+
+
+\subsection{Background}%
+\label{sub:background}
+This section presents some necessary backgound knowledge to facilitate readers to better understand HyperPS and Figure \ref{pic:panorama}.
+\subsubsection{QEMU-KVM}%
+\label{ssub:qemu_kvm}
+QEMU is a generic and open source machine emulator and virtualizer. QEMU can use other hypervisor like \verb|Xen| or KVM to use CPU extensions for virtualization. When used as a virtualizer, QEMU achieves near native performances by executing the guest code directly on the host CPU.
+Kernel-based Virtual Machine (KVM) is an open source virtualization technology that converts Linux into a type-1 (bare-metal) hypervisor. KVM is a part of the Linux kernel that shares all the linux kernel's operating system-level componets -such as the memory manager, process scheduler, security manager, and more to run VMs. Every VM is implemented as a regular Linux process, shceduled by the standard Linux scheduler, with dedicated virtual hardware like a network card, memory, and disks. KVM mainly consists of a loadable kernel module, kvm.ko, that provides the core virtualization infrastructure and a processor specific module, kvm-intel.ko or kvm-amd.ko.
+In virtualization environment, KVM does not work on its own. It is only an API provided by the kernel for userspace. End users typically use KVM throgh QEMU where it is present as an acceleration method.
+For the QEMU-KVM architecture, KVM interacts with QEMU (QEMU runs at the user space) in two ways: through device file \verb|/dev/kvm| and through memory mapped pages
+% KVM interacts with user space - in most case QEMU - in two ways: through device file \verb|/dev/kvm| and through memory mapped pages.
+Memory mapped pages are used for bulk transfer of data between QEMU and KVM. \verb|/dev/kvm| is the main API exposed by KVM. It supports a set of \verb|ioctl|s which allow QEMU to manage VMs and interact with them.
+% 怎么引出HostOS的问题
+% Since KVM is a part of the linux kernel, the Linux and the QEMU
+% leverages the linux kernel's system-level
+
+
+
+\subsubsection{VMCS}%
+\label{ssub:vmcs}
+Virtual-machine Control Structure is a data structure used in Virtual Machine eXtensions (VMX). It controls VMX non-root operations (guest virtual machine execution operations) and VMX transitions. Access to the VMCS is managed through the VMCS pointer (one per logical processor). The VMCS pointer is read and written suing the instructions \verb|VMPTRST| and \verb|VMPTRLD|. In general, the hypervisor configures a VMCS using \verb|VMREAD|, \verb|VMWRITE|, and \verb|VMCLEAR| instructions. A hypervisor could use a different VMCS for each virtual machine that it supports. For a virtual machine with multiple logical processor, the hypervisor could use a different for each logical processor. A logical processor may also maintain a number of VMCSs that are active, however, at any given time, at most one of the active VMCSs is the \textbf{current} VMCS. VMX instructions operate only on the \textbf{current} VMCS. 
+
+%这段写的不好，没有写出危害的具体内容，应该突出VMCS就是唯一的接口，VM的所有的行为都是在VMCS的instruct下的
+A compromised HostOS/hypervisor can force the guest virtual machine exit by tramper VM-Execution Control fields and VM-exit control fields in VMCS and tramper the guest virtual machine by writing Guest-State Area fields. 
+
+% 一个被危害的hypervisor可以强迫虚拟机退出，并通过篡改其vmcs中的field等信息实现对guest VM 的危害。
+
+% \subsection{Second Level Address Translation}%
+% \label{sub:second_level_address_translation}
+% Second Level Address Translation (SLAT) is a hardware-assisted virtualization technology which makes it possible to quick manage the physical memory without lots of VM exits. Extended Page Table (EPT) is the intel's implementation of SLAT, while ARM names its implementation as Stage-2 Page-tables.
+
+
+\subsubsection{EPT}%
+\label{ssub:ept}
+Intel implements it Second Level Address Translation (SLAT) as Extended Page Table (EPT). 
+EPT allows each virtual machine to manage its page table (not the EPT), without giving access to the underlying host machine's MMU Hardware. Thus, EPT reduces the need for hypervisor to keep syncing the shadow pages eliminating the overhead.
+If EPT is enabled, guest-physical addresses are translated by traversing a set of EPT paging structures to produce physical addresses that are used to access memory.
+In addition to translating a guest-physical address to a physical address, EPT specifies the privileges that software is allowed when accessing the address. Attempts at disallowed accesses are called EPT violations and cause VM exits.
+
+A compromised HostOS/hypervisor could tramper EPT paging structures so that the virtual machine will execute arbitrary malicious code without knowing it. 
+Moreover, a compromised HostOS/Hypervisor could access any data in the guest virtual machine with the help of virtual machine introspection.
 
 
 
@@ -51,3 +98,19 @@ In this section, we discuss the motivations of why we need to protect VMs over a
 We assume that the HostOS/Hypervisor has been compromised and controlled by the powerful adversary. The adversary can turn off kernel security mechanisms, such as DEP, SMEP, SMAP, and so on. 
 
 %原威胁模型写的有问题。给出的两个例子后面写危害VMCS和
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
