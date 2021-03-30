@@ -94,7 +94,8 @@ Moreover, a compromised HostOS/Hypervisor could access any data in the guest vir
 
 
 
-\subsection{Attacks and Threat Model} \label{sub:thretmodel}
+%\subsection{Attacks and Threat Model} \label{sub:thretmodel}
+\subsection{Attack Surface}\label{sub:attacksurface}
 \iffalse
 在这一章节中，我们首先给出攻击者的攻击路径，这个攻击路径并不需要单独画图，因为上面的图中已经阐释清楚了，攻击者有哪些方式可以危害虚拟机，只需要在图中更加明确的标识出来就可以了。然后再给出本文的威胁模型。
 
@@ -104,7 +105,9 @@ Moreover, a compromised HostOS/Hypervisor could access any data in the guest vir
 其次，我们给出敌手的能力。
 \fi
 
-In this section, we first present how attackers tamper virtual machines through exploiting vulnerabilities in HostOS/Hypervisor. Then, we present several typical attack models/examples targeting at VMCS and EPT. At last, we illustrate the adversary's abilities. 
+In this section, we first present how attackers tamper virtual machines through exploiting vulnerabilities in HostOS/Hypervisor. Then, we present several typical attack models/examples targeting at VMCS and EPT. At last, we explain some additional attacks (not attacks relative to virtualization components) depicted in Figure \ref{pic:panorama}.
+%TODO 将图中的具体的攻击名称 1 2 3 4 等添加进去。
+%At last, we illustrate the adversary's abilities. 
 
 \subsubsection{How attacker subvert VM}
 As illustrated in Section \ref{sub:background}, Hypervisor controls the execution of VMs through VMCSs, and manages VMs' physical memory through EPT. As such, these two data structures become the key target for adversary to tamper VMs. 
@@ -146,8 +149,8 @@ For the remapping attack, there are VM1 (attacker) and VM2 (victim). A physical 
 We also take into account the fact that attacker already knows the deployment of HyperPS. As depicted in Figure \ref{pic:panorama}, key components, such as Kernel Page Tables, Control Registers, to create the secure and isolated execution environment are also protected by us. More details about the creation of the secure and isolated execution environment are illustrated in Section. 
 %TODO 添加关于章节的引用
  
-\subsubsection{Threat Model}
-In summary, 
+\subsection{Threat Model} \label{sub:threatmodel}
+In this paper, 
 We assume that the HostOS/Hypervisor has been compromised and controlled by the powerful adversary. The adversary can turn off kernel security mechanisms, such as DEP, SMEP, SMAP, and so on. The adversary can tamper fields of VMCSs and EPTs with dedicated malicious values. The adversary can also tamper VMCSs and EPTs through DMA write or regular memory access to them.  
 
 We assume that the adversary does not possess the capability to conduct side channel attack and Hardware-based attack. We also assume that the adversary is unwilling to conduct the Denial of Service attack (DOS). In this paper, we assume that hardware resources are trusted, including processor, buses, BIOS/UEFI, and so on. 
