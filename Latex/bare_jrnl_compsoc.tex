@@ -61,6 +61,7 @@
 \usepackage{multirow}
 \usepackage{graphicx}
 \usepackage[justification=centering]{caption}
+\usepackage{fancyhdr} % 添加页眉页脚
 
 
 % Some very useful LaTeX packages include:
@@ -487,6 +488,13 @@ Computer Society, IEEE, IEEEtran, journal, \LaTeX, paper, template.
 % make the title area
 \maketitle
 
+% TODO 正式版提交之前将添加页码相关内容删除
+% \thispagestyle{fancy} % IEEE模板在\maketitle后会自动声明\thispagestyle{plain}，
+                        % 导致第一页什么都没有。所以得把plain更改为fancy
+\pagestyle{fancy}
+\rfoot{\thepage}
+
+% end 添加页码相关内容
 
 % To allow for easy dual compilation without having to reenter the
 % abstract/keywords data, the \IEEEtitleabstractindextext text will
