@@ -26,8 +26,29 @@ In this section, we first propose the architecture of HyperPS. Then, in the foll
 \subsection{HyperPS Overview}%
 \label{sub:hyperps_overview}
 
-首先一句话说明HyperPS要做什么，然后Figure depict the details on the architecture of HyperPS. 
-As shown in Figure, 我们创造了一个同层隔离空间用于履行原本属于compromised HostOS的管理虚拟机物理内存的权力。 
+% 首先一句话说明HyperPS要做什么，然后Figure depict the details on the architecture of HyperPS.
+% As shown in Figure, 我们创造了一个同层隔离空间用于履行原本属于compromised HostOS的管理虚拟机物理内存的权力。
+
+
+We present HyperPS to protect guest virtual machines against compromised hypervisor. In virtualization environment, the hyperivor deprivileges the guest VM’s kernel and interposes all interactions between guest VMs and the physical memory. Neither isolation between VMs nor virtual-physical mapping relationships in a VM will inevitable be tamperred if the hypervisor is compromised. HyperPS, thus, deprives the hypervisor of privileges on managing physical memory.
+
+
+Figure \ref{fig:design} depicts the details on the architecture of HyperPS. 
+Firstly, as shown in Figure \ref{fig:design}, we create a delicate kernel-level secure and isolated execution space, called HyperPS Space, to process privilege of managing physical memory that originally belonged to the compromised hypervisor. 
+Funtions about physical management, such as EPT operations and EPTP switching operations in VMCS operations, are equivalently hooked into the HyperPS space. 
+For cases where an attacker uses regular memory access or newly introduced malicious VMX assembly code to bypass the hooked functions and tamper with the relevant memory magement data structures, HyperPS removed VMCS and EPT, which are crucial to virtualization, from the original hypervisor space and places them in the HyperPS Space.
+Secondly, in the HyperPS space, we introduce a new data structure, called Physical Page Tag Table (PPTT), to tag the mapping relations between the physical frames and the virtual machines. With the help of this data structure, even if an attacker tampers EPT Paging Structures with malicious value through a legal function, HyperPS can still effectively detect such attack and resist it.
+
+%FIXME 图中的内容添加虚拟机退出的线，removed的字段加粗 pptt是表 修改成表的形式
+
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=0.9\linewidth]{IMG/design.pdf}
+    \caption{HyperPS Architecture}%
+    \label{fig:design}
+\end{figure}
+
+
 
 
 
