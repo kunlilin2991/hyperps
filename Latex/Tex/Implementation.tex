@@ -16,13 +16,19 @@ Figure \ref{fig:address} describes the address layout of HyperPS.
 \end{figure}
 
 As shown in the Figure \ref{fig:address}, HyperPS creates the delicate kernel-level secure and isolated execution space by using two sets of page tables. 
-On the left side of Figure \ref{fig:address}, the normal page table contains code and data of the HostOS kernel world. However, page table entries about the HyperPS Space haved been removed from this table. On the other side of Figure \ref{fig:address}, 
+On the left side of Figure \ref{fig:address}, the normal page table contains code and data of the HostOS kernel world. However, page table entries about the HyperPS Space has been removed from this table. %The attacker can not subvert the HyperPS Space 
+Because all corresponding page table entries have been removed, the attacker can not find out in which memory the HyperPS Space locates, let alone subvert programs in the HyperPS Space. 
+As shown in the Figure \ref{fig:address}, The Switch Gate is the only way that can perform the context switch from the Normal Space (the original hypervisor space) to the HyperPS Space.
+On the other side of Figure \ref{fig:address}, HyperPS safeguard the integral page tables which contain both the kernel code, data and the HyperPS code, data. Besides, HyperPS removed the execution permission of all kernel code to prevent unauthorized code execution.
 
-
-except for that of HyperMI World. This can prevent compromised hypervisor from breaking the integrity of HyperMI World. Programs running in normal world can not access data in HyperMI World. On the right of Figure \ref{fig2}, all address is mapped in HyperMI page table.
+\subsection{Creating Switch Gate}
+In the middle of Figure \ref{fig:address}, the switch gate includes entry/exit gate and shared buffer. Entry gate provides the only entrance to HyperPS Space and the exit gate provides the address for returning to the Normal Space. The shared buffer contains common data and code in Normal Space and the HyperPS Space. Common code is switch code, common data is entrance address to HyperPS Space and return address to the Normal World. The switch gate is mapped at the same place in the Normal Space and the HyperPS Space, because the switch gate code must be called by the two worlds before and after switching. Of course, the entrance address must be protected after switching to HyperPS Space in case that a attacker accesses HyperPS Space causally after trusted boot. Protection to Switch Gate will be illustrated in the Section .
+%FIXME 添加Section的引用
 
 
 \iffalse
+except for that of HyperMI World. This can prevent compromised hypervisor from breaking the integrity of HyperMI World. Programs running in normal world can not access data in HyperMI World. On the right of Figure \ref{fig2}, all address is mapped in HyperMI page table.
+
  We use two isolated address spaces based on two sets of page tables to achieve isolation of HyperMI World.
 Figure \ref{fig2} describes the address space layout of two worlds through two sets of page table, the normal page table and HyperMI page table. On the left of Figure \ref{fig2}, the normal page table contains code and data of the normal world except for that of HyperMI World. This can prevent compromised hypervisor from breaking the integrity of HyperMI World. Programs running in normal world can not access data in HyperMI World. On the right of Figure \ref{fig2}, all address is mapped in HyperMI page table.
 HyperMI code remains executable and HyperMI data remains writable. What's the most important, kernel code is forbid to execute when HyperMI World is active, so that it can not attack HyperMI World.

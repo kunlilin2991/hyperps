@@ -1,0 +1,51 @@
+\section{Security Guarantee for HyperPS Space}%
+\label{sec:securityforhyperps}
+
+The security of HyperPS Space guarantees the security of HyperMI, because HyperMI relies on HyperPS Space to provide a secure execution environment.
+Nevertheless, without any protection measures, the Normal Space kernel page table is not secure for four reasons: 1)Attackers can control page table with the highest privilege after hypervisor is compromised. 2) Attackers can bypass the switch gate to break the security of HyperPS Space. 3) Attackers with the highest privilege can free to execute privileged instructions to access the value of privilege registers, such as CR0, CR3 and so on. 4) Attackers can carry out DMA attack to access HyperPS Space casually.
+We detail the protection measures for these four types of attacks below.
+%\paragraph
+
+
+
+\textbf{Protecting Page Table}
+There are three reasons for controlling the two sets of kernel page tables: 1) To access casually or bypass HyperPS Space, the attacker can tamper normal page table to map address of HyperPS Space or load malicious page table to CR3.
+%2) To execute code injection attack, the attacker can close the write protection mechanism by modifying the value of CR0 register, changing the access permission bits of the memory page. 
+2) The attacker can cover the hooked functions, redirect the functions to malicious code and bypass interaction monitoring of HyperMI. 3) To break HyperPS Space, malicious kernel code with execution permission can be executed to subvert HyperMI.
+% by means of the vulnerabilities of the original kernel code. 
+%access HyperPS Space causally when HyperPS Space is running if kernel code has the execution permission. 
+%Therefore, three secure approaches against these attacks are as follow.
+
+For the first attack, %HyperMI code and data is unmapped in page table of Normal Space.
+% And to protect the entrance address to HyperPS Space from being leaked,
+%pre-allocate some space during trusted boot which kernel can't access directly through MMU, critical data in
+we remove all entries that map to HyperPS Space from the page table in Normal Space. Deprive the ability to access CR3 of the kernel. % in order to avoid loading illegal page table, and resist bypassing HyperPS Space.
+For the second attack, we intercept the accessing operation to CR0 and maintain the WP bit as 1. We stick to W$\oplus${X} and maintain the code segment of hooked functions unwritable.
+For the third attack, we set the kernel code segment as NX (non-executable) when HyperPS Space is running. For more security, we modify the kernel to configure these two sets of page table as read-only by setting the memory regions of the page tables unwritable. This is necessary to prevent the page tables from being modified by attackers. Any write permission modification of two sets of page table must cause the kernel to page fault, then we dispatch page fault to HyperPS Space to verify the correctness of address mapping. 
+%This idea is adopted in SKEE\cite{Azab2016SKEE}.
+
+
+\textbf{Worlds Switching Securely}
+HyperMI creates a switch gate between the Normal Space and HyperPS Space by loading entry address of page table into CR3.
+In order to ensure switch security, we design the switch process as follows.
+% And we must ensure atomicity and security during the switching process.
+
+The switching process described in Figure \ref{fig2} is as follows: 1) Save the kernel state to the stack including general registers and interrupt enable/disable status. 2) Clear the interrupt with the CLI instruction. 3) Load the page table to the register CR3. 4) Interrupt again. 5) Jump to the HyperPS Space. For the exit process, the control flow returns to the Normal Space by performing the operations in the reverse order.
+
+\iffalse
+If we don't use the switch process above, just write the address of different page tables to CR3. Switch to HyperPS Space and return to Normal Space directly. Attackers can attack the system by violating security. Attackers can get the address of HyperPS Space by accessing the register CR3. We use interruption policy (the first step) in our switching process to prevent this attack. 
+If there is not the second interruption (the fourth step), attackers can implement another attack. They can jump the first interruption.
+%and get the base address of page table of HyperPS Space from CR3. 
+Then they can access HyperPS Space successfully. 
+%This attack can go against security and atomicity.
+However, we adopt twice interruption policy (the fourth step) in our switching process to prevent this. 
+%Twice interruption is used to ensure security in case of attackers carrying out attack after the third step in our switch process. 
+%After attackers jump the first interrupt and get the address from CR3, the second interruption can prevent attackers going to HyperPS Space directly. 
+This idea is inspired from the design of gate in SecPod\cite{Wang2015SecPod}.
+
+\fi
+
+\textbf{Accessing Privilege Registers Securely}
+The hypervisor without HyperMI is privileged and it can free to execute privileged instructions, so that it can write any value to the related privileged registers. 1) Malicious attackers can close DEP mechanism by writing CR0, close SMEP mechanism by writing CR4. 2) Kernel code can load a crafted page table to bypass HyperPS Space by converting a meticulously constructed address of one page table to CR3.
+To prevent the attack, HyperMI deprives sensitive privilege instructions executed by the hypervisor, and dispatches captured events to HyperPS Space. HyperPS Space can choose how to handle this event, such as executing, issuing alerts or terminating the process. 
+
