@@ -86,10 +86,13 @@ Some registers access operations including CR0, CR3, CR4, are controlled and hoo
 %In addition, the memory can be accessed through DMA operations bypassing the MMU, except for accesses by executing memory accessing instructions.
  DMA attack is described in detail in section \ref{SG}. Attackers can use this feature to read or corrupt arbitrary memory regions. DMA attack is not a threat to HyperPS, because HyperPS is inherently secure against DMA using IOMMU. Remove the corresponding mapping of the critical data from the page table which IOMMU uses. These critical unmapped data includes the entrance address of HyperPS, data recording Page-Mark structure used in VM isolation, VM-Mark structure and so on. DMA attack that aims at modifying the VM memory or the page tables can also be defeated.
 
-\begin{figure}
-\centerline{\includegraphics[width=9cm,height=5.2cm]{performance.pdf}}
-\caption{Performance overhead.} \label{fig5}
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=0.8\linewidth]{IMG/performance.pdf}
+    \caption{Performance Overhead}%
+    \label{fig5}
 \end{figure}
+%FIXME 修改图为HyperPS
 
 \subsection{Performance Evaluation}
 
