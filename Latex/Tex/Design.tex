@@ -45,12 +45,12 @@ Lastly, Switch Gate is the only interface between the kernel space and the Hyper
 
 %FIXME 图中的内容添加虚拟机退出的线，removed的字段加粗 pptt是表 修改成表的形式
 
-\begin{figure}[htpb]
+\begin{figure*}[htpb]
     \centering
     \includegraphics[width=0.9\linewidth]{IMG/design.pdf}
     \caption{HyperPS Architecture}%
     \label{fig:design}
-\end{figure}
+\end{figure*}
 
 
 
@@ -153,8 +153,12 @@ In the HyperPS space, HyperPS intercepts the address mapping function about I/O.
 % In the HyperPS Space, DMA Management Component
 % In this paper, HyperPS employs IOMMU mechanism to resist DMA attacks. IOMMU carries out access control for DMA access.
 
-\subsection{VM Memory Protection}%
-\label{sub:vm_memory_protection}
+% \subsection{VM Memory Protection}%
+% \label{sub:vm_memory_protection}
+\subsection{Privilege Management}%
+\label{sub:privilege_management}
+
+
 
 \iffalse
 那么文章的核心就是剥夺了VMM管理物理内存的权限，这就是HyperPS的P的内容。
