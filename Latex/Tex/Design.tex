@@ -47,8 +47,8 @@ Lastly, Switch Gate is the only interface between the kernel space and the Hyper
 
 \begin{figure*}[htpb]
     \centering
-    \includegraphics[width=0.9\linewidth]{IMG/design.pdf}
-    \caption{HyperPS Architecture}%
+    \includegraphics[width=0.9\linewidth]{IMG/newdesign.pdf}
+    \caption{HyperPS Architecture  \\ HyperPS is committed to protect guest virtual machine under the compromised HostOS/Hypervisor. Privileges to manage VMCS and EPT are stripped from the compromised HostOS/Hypervisor into a separated and secure execution environment: HyperPS Space. The HyperPS space shares the same processor privilege as the HostOS. HyperPS does not rely on any special hardware or a higher privilege. Updates to VMCS and EPT are abandoned by the HyperPS, if the operations are not authorized or are adjudged as harmful to virtual machine.}%
     \label{fig:design}
 \end{figure*}
 
@@ -204,7 +204,7 @@ HyperPS iterates the VM-Mark table to check if the EPTP is authorized in advance
 
 \begin{table}[]
     \caption{VM-Mark Structure}
-    \resizebox{0.9\linewidth}{3.8mm}{
+    \resizebox{0.9\linewidth}{4mm}{
 \begin{tabular}{l|l|l|l}
 \hline
 \textbf{Label}       & \multicolumn{1}{c|}{VMID} & \multicolumn{1}{c|}{EPTID} & \multicolumn{1}{c}{EPT\_Address} \\ \hline
@@ -237,7 +237,7 @@ With the help of the Page-Mark table, the attacker can no longer map a physical 
 
 \begin{table}[]
     \caption{Page-Mark Structure}
-    \resizebox{0.9\linewidth}{4.5mm}{
+    \resizebox{0.9\linewidth}{5mm}{
 \begin{tabular}{l|l|l|l}
 \hline
 \textbf{Label}       & \multicolumn{1}{c|}{OwnerID} & \multicolumn{1}{c|}{SharedID} & \multicolumn{1}{c}{PFN}                                                                  \\ \hline
