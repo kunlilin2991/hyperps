@@ -729,6 +729,7 @@ The authors would like to thank...
 
 
 
+\iffalse
 % trigger a \newpage just before the given reference
 % number - used to balance the columns on the last page
 % adjust value as needed - may need to be readjusted if
@@ -770,7 +771,6 @@ H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
 %\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{mshell}}]{Michael Shell}
 % or if you just want to reserve a space for a photo:
 
-\iffalse
 
 \begin{IEEEbiography}{Michael Shell}
 Biography text here.
@@ -802,6 +802,8 @@ Biography text here.
 % is flush with the other column.
 %\enlargethispage{-5in}
 
+\bibliographystyle{plain}
+\bibliography{Bib/hyperps}
 
 
 % that's all folks
