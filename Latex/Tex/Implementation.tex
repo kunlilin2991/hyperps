@@ -5,8 +5,102 @@ We have implemented a full-featured prototype of HyperPS.
 
 \subsection{HyperPS Space}%
 \label{sub:hyperps_space}
-In this paper, HyperPS creates a delicate kernel-level secure and isolated execution space, called HyperPS Space, to inherit privileges of managing physical memory that originally belonged to the compromised hypervisor. 
-Figure \ref{fig:address} describes the address layout of HyperPS.  
+% In this paper, HyperPS creates a delicate kernel-level secure and isolated execution space, called HyperPS Space, to inherit privileges of managing physical memory that originally belonged to the compromised hypervisor.
+% HyperPS does not rely on a higher privileged layer or any special hardwares.
+\iffalse 
+
+实现了虚拟机的隔离主要通过保护和隔离EPT和虚拟机内存来完成，主要完成4部分，1）实现vm-mark表，将VM与EPT进行绑定确保各虚拟机只能访问自己的EPT。2）hyperps剥离了EPT相关的所有访问函数，保证ept表的安全访问。以防被恶意更改。3）页分配时实现page-mark表，来标注page唯一的属主vm，保证vm-ept-page的一致性。在页分配时验证页的属主，空页绑定页与vm，非空页验证属主，以免页被重新分配。4）页释放时清除页内容。如果原vm的内容页在释放时未被清除，当该页再次分配给其余虚拟机时，其上的内容可能被恶意虚拟机读取而泄露数据。
+
+We propose ept isolation and vm isolation by preventing ept access and released vm page access , following the steps. 1) Guarantee the consistency of vm and ept. Making vm-ept mark table to ensure EPT isolation and one VM only access own corresponding EPT. 2) Strips ept access privilege. Strips all access functions related to EPT to ensure safe access and to ept and prevent malicious changes. 3) Page-mark table. The page-mark table is created marking the unique owner vm of the page during page allocation. So the consistency of vm-ept-page can ensure ept isolation and vm isolation, one vm can only access own ept and own pages. During page allocation, the owner of the page is verified, empty pages are bound to the vm directly, and the allocated page is discarded to prevent the page from being remapped. 4)Clear page content when released. If the content page of the original vm is not cleared after being released, after allocated to other virtual machines again, the content on the page may be read by a malicious virtual machine so that privacy data may be leaked.
+ 
+It is important to ensure EPT isolation and one VM only access own corresponding EPT. To ensure one EPT for one VM, HyperPS creates the VM-Mark structure stored in HyperPS World as Table I described. It records VMID, EPTID, EPT Address and binds them together. VMID is created when the VM is created. EPTID and EPT Address is recorded as long as the EPT of current VM is created. This table is destroy once the VM is shutdown or destroyed.
+ 
+Vm-ept mark table is hidden in hyperps world. all access functions for EPT address must be executed in hyperps world. When EPT is created, use the hash function to construct the ID number of the ept according to the ept address, bind it to the current VMID as a structure, the relationship between VM and EPT is established. Other access functions of EPT, such as reading and writing,updating will be executed  in hyperps wolrd for safety.
+Stripping EPT's access capability can prevent attackers from tampering with EPT. When 
+\fi
+
+
+In this paper, we create a delicate kernel-level trusted execution environment, called HyperPS Space, to inherit privileges of managing physical memory that originally belonged to the compromised hypervisor. 
+The HyperPS Space achieves isolation and secure context switching without relying on a higher privileged layer or any special hardwares. 
+% As shown in Figure \ref{fig:address}, we create the HyperPS Space by using two set of page tables.
+% describes the address layout of HyperPS.
+
+\iffalse
+在创建的时候，要讲明白为什么是Hypervisor的情况下，要从hostos出发。
+首先是创建，创建完成之后再写如何保证隔离的 即prohibit the kernel from modifying the momory layout or access permission of the system.
+\fi
+% does not rely on a higher privileged layer or any special hardwares.
+
+
+\subsubsection{The Creation of HyperPS Space}%
+\label{ssub:hyperps_space_creation}
+
+\iffalse
+% Figure \ref{fig:address} describes the address layout of HyperPS.
+这段要说明为什么要在hostOS上使用两套页表的方法创建同层隔离的空间。
+当hostos已经不可信的时候，我们需要一个全新的TEE用于host我们的保护工具。在这篇文章中，我们采用了同层隔离的方式来创建我们的TEE。
+我们通过两步创建我们的space，首先是在什么地方创建，其次是保证其隔离性。
+% 一个合格的TEE应该
+\fi
+
+In our prototype, we create the HyperPS Space by using two set of page tables.  
+Figure \ref{fig:address} describes the address layout of HyperPS. 
+% However,
+% HyperPS Space的创建并不能在kernel boot阶段，因为此时，内核需要
+% hostos的kernel并不能在boot的时候就直接完成两套页表的建立。
+% As shown in this figure, HyperPS has to load itself into memory at first.
+As shown in this figure, at the initialization stage, HyperPS has to load itself into memory firstly before it got executed. 
+At this stage, all resources are managed by the Hostos kernel, HyperPS needs to request enormous number of memory allocation from the Hostos. These memory are used to hold HyperPS data and security tools that inherit compromised hypervisor's privileges of managing physical memory. 
+Secondly, HyperPS creates a new page table that has already excluded the HyperPS Space. As shown in Figure \ref{fig:address}, this dedicated page table is placed in the normal space and accessed by the compromised HostOS kernel. 
+Because all page table entries that are relative to HyperPS Space have been removed from that dedicated page table, normal memory access beyond the HyperPS Space can not visit memory regions of HyperPS Space. 
+Thirdly, HyperPS will set a new GDT, IDT and stack for itself.
+At last, HyperPS returns execution back to the normal space by loading the address of the dedicated page table into the control register CR3. 
+
+On the execution of the four steps mentioned above, HyperPS has established an execution environment. 
+However, at this time, this execution environment does not have the conditions for isolation and security, since the kernel can still modify this memory layout or access permission. 
+
+
+\subsubsection{The Isolation of HyperPS Space}%
+\label{ssub:the_isolation_of_hyperps_space}
+
+
+
+
+On the left side of Figure \ref{fig:address}, the normal page table contains code and data of the HostOS kernel world. However, page table entries about the HyperPS Space has been removed from this table. %The attacker can not subvert the HyperPS Space 
+Because all corresponding page table entries have been removed, the attacker can not find out in which memory the HyperPS Space locates, let alone subvert programs in the HyperPS Space. 
+% As shown in the Figure \ref{fig:address}, The Switch Gate is the only way that can perform the context switch from the Normal Space (the original hypervisor space) to the HyperPS Space.
+On the other side of Figure \ref{fig:address}, HyperPS safeguard the integral page tables which contain both the kernel code, data and the HyperPS code, data. Besides, HyperPS removed the execution permission of all kernel code to prevent unauthorized code execution.
+
+
+
+
+% will be used by the kernel
+that originally belonged to the compromised hypervisor.
+
+we create the HyperPS Space by using two set of page tables.
+In this paper, 
+
+At first, HyperPS 
+
+HyperPS 
+
+all resources are managed by guest kernel. 
+We do not guarantee all allocated memory is continuous. 
+HyperPS request for memory from the HostOS. 
+After all memory has been allocated, HyperPS builds a new memory mapping for then in proper memory address space, this makes dynamically-allocated data separated from HostOS. After HyperPS initializes the memory management unit and buils another page table mapping the whole physical memory for EPT, HyperPS setting a new GDT, a new IDT and a new stack ofr itself. 
+
+
+\iffalse
+下面的这部分内容应该是保护的内容，涉及的是EPT和缺页中断的处理，不应该是地址空间创建这部分内容。
+在QEMU-KVM架构下，一台虚拟机的memory space同时受宿主机的page table和EPT两套页表管理。
+% 在non-root模式下，
+对于宿主机而言，虚拟机就是一个qemu进程，这个与其他的普通进程没有区别，宿主机通过传统的页表管理qemu所需要的所有地址空间。hostOS负责实际分配给该虚拟机的所有物理页框。
+当EPT enable的时候，
+在root模式下，EPT负责将qemu进程的
+
+在QEMU-KVM架构下，以HostOS 视角看，整个虚拟机即为一个QEMU进程，EPT用于管理已经分配给QMEU进程中的物理页。
+Traditional page tables continue to be reponsible for FVA-GPA, while EPT is responsible for GPA-HPA.
+\fi
 
 \begin{figure}[htpb]
     \centering
