@@ -45,49 +45,78 @@ The HyperPS Space achieves isolation and secure context switching without relyin
 
 In our prototype, we create the HyperPS Space by using two set of page tables.  
 Figure \ref{fig:address} describes the address layout of HyperPS. 
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=0.8\linewidth]{IMG/address.pdf}
+    \caption{Address layout of HyperPS}%
+    \label{fig:address}
+\end{figure}
+
+
 % However,
 % HyperPS Space的创建并不能在kernel boot阶段，因为此时，内核需要
 % hostos的kernel并不能在boot的时候就直接完成两套页表的建立。
 % As shown in this figure, HyperPS has to load itself into memory at first.
 As shown in this figure, at the initialization stage, HyperPS has to load itself into memory firstly before it got executed. 
 At this stage, all resources are managed by the Hostos kernel, HyperPS needs to request enormous number of memory allocation from the Hostos. These memory are used to hold HyperPS data and security tools that inherit compromised hypervisor's privileges of managing physical memory. 
+In our prototype, we do not guarantee that all allocated memories are continuous in physical memory. 
 Secondly, HyperPS creates a new page table that has already excluded the HyperPS Space. As shown in Figure \ref{fig:address}, this dedicated page table is placed in the normal space and accessed by the compromised HostOS kernel. 
-Because all page table entries that are relative to HyperPS Space have been removed from that dedicated page table, normal memory access beyond the HyperPS Space can not visit memory regions of HyperPS Space. 
-Thirdly, HyperPS will set a new GDT, IDT and stack for itself.
+Because all page table entries that are relative to HyperPS Space have been removed from that dedicated page table, 
+% normal memory access beyond the HyperPS Space can not visit memory regions of HyperPS Space.
+memory regions used by HyperPS are carved out of the memory reanges accessible to the HostOS kernel. 
+% Thirdly, HyperPS will set a new GDT, IDT and stack for itself.
 At last, HyperPS returns execution back to the normal space by loading the address of the dedicated page table into the control register CR3. 
 
-On the execution of the four steps mentioned above, HyperPS has established an execution environment. 
+On the execution of the three steps mentioned above, HyperPS has established an execution environment. 
 However, at this time, this execution environment does not have the conditions for isolation and security, since the kernel can still modify this memory layout or access permission. 
 
 
 \subsubsection{The Isolation of HyperPS Space}%
 \label{ssub:the_isolation_of_hyperps_space}
+% HyperPS has created a protected virtual address space.
+HyperPS has to guarantee that memory regions used by HyperPS are carved out of the memory ranges accessible to the kernel.
+In oder to achieve the isolation of the HyperPS Space, HyperPS restricts the compromised HostOS kernel access to this space. 
+% To protect HyperPS Space, firstly, we deprive the write permission to whole kernel page tables,
+Firstly, we deprive the write permission to whole kernel page tables, 
+so that the HostOS kernel can still navigate and examine page table entries, while direct write operations will trigger error. 
+% any modification operation will
+% to
+% navigation and examination of page table entries
+% so that they are exclusively writable to HyperPS in the HyperPS Space.
+% To protect HyperPS Space, write permission to HostOS kernel page tables
+Secondly, HyperPS removed all page table management functions and macros and replaces them with hooks that jump to HyperPS Space, so that any modification to the dedicated kernel page table in the normal space will be redirected to HyperPS Space. 
+HyperPS makes sure that the HostOS kernel can neither tamper the virtual memory permissions of the HyperPS Space, nor can it establish new mapping relationship to the physical memory frames related to the HyperPS Space. 
+In another word, the HostOS kernel page table are exclusively writable to HyperPS only. 
+Lastly, HyperPS deprives the HostOS kernel from executing certain MMU functions so that it cannot direct the CPU to use alternative page tables other than the dedicated one we put in the normal space. HyperPS instrumented 
 
 
+HyperPS makes sure that the HostOS kernel cannot modify any of the dedicated kernel page table to tamper the virtual memory access permissions of HyperPS Space. 
+
+memory region used by HyperPS are carved out of the memory ranges accessible to the kernel.
+
+In another word, the HostOS kernel page table are exclusively writable to HyperPS only. 
 
 
-On the left side of Figure \ref{fig:address}, the normal page table contains code and data of the HostOS kernel world. However, page table entries about the HyperPS Space has been removed from this table. %The attacker can not subvert the HyperPS Space 
-Because all corresponding page table entries have been removed, the attacker can not find out in which memory the HyperPS Space locates, let alone subvert programs in the HyperPS Space. 
-% As shown in the Figure \ref{fig:address}, The Switch Gate is the only way that can perform the context switch from the Normal Space (the original hypervisor space) to the HyperPS Space.
-On the other side of Figure \ref{fig:address}, HyperPS safeguard the integral page tables which contain both the kernel code, data and the HyperPS code, data. Besides, HyperPS removed the execution permission of all kernel code to prevent unauthorized code execution.
+HyperPS will check 
+so that the HostOS kernel is not allowed to change any ken
+% Secondly, we also hook all page table management functions and macros to HyperPS Space, so that
 
+. For example, we instrumented 
 
+all page table functions 
 
+这里HyperPS分为两步实现保护，一方面限制所有PT访问的函数。另外一方面限制CR3函数 
 
-% will be used by the kernel
-that originally belonged to the compromised hypervisor.
+It starts by instrumenting the kernel code to remove certain MMU control instructions. such as the ones that change the location of memory tranlation tables. 
+SEKK also monitor memory layout changes to guarantee that no other unverified privileged code is allowed to execute. 
 
-we create the HyperPS Space by using two set of page tables.
-In this paper, 
+hook的函数：
+pte pme pagefualt 
+vmcs read write clear 
+pfn modify map 
+clean page modify 
+ksm page modify
 
-At first, HyperPS 
-
-HyperPS 
-
-all resources are managed by guest kernel. 
-We do not guarantee all allocated memory is continuous. 
-HyperPS request for memory from the HostOS. 
-After all memory has been allocated, HyperPS builds a new memory mapping for then in proper memory address space, this makes dynamically-allocated data separated from HostOS. After HyperPS initializes the memory management unit and buils another page table mapping the whole physical memory for EPT, HyperPS setting a new GDT, a new IDT and a new stack ofr itself. 
 
 
 \iffalse
@@ -102,12 +131,6 @@ After all memory has been allocated, HyperPS builds a new memory mapping for the
 Traditional page tables continue to be reponsible for FVA-GPA, while EPT is responsible for GPA-HPA.
 \fi
 
-\begin{figure}[htpb]
-    \centering
-    \includegraphics[width=0.8\linewidth]{IMG/address.pdf}
-    \caption{Address layout of HyperPS}%
-    \label{fig:address}
-\end{figure}
 
 As shown in the Figure \ref{fig:address}, HyperPS creates the delicate kernel-level secure and isolated execution space by using two sets of page tables. 
 On the left side of Figure \ref{fig:address}, the normal page table contains code and data of the HostOS kernel world. However, page table entries about the HyperPS Space has been removed from this table. %The attacker can not subvert the HyperPS Space 
@@ -135,11 +158,20 @@ In the middle of Figure \ref{fig2}, the switch gate includes entry/exit gate and
 
 
 
+\iffalse
+5.2内存所有权跟踪
 
+   为了确保VMM和它的guest VM之间的内存隔离，CloudVisor保持了一个表来跟踪每个物理内存页的所有权。这个表中的值是这个页的所有者ID。每个VM在被引导时被分配了一个独一无二的ID。VMM的ID被固定为0。CloudVisor确保一个物理内存页只能在同一时间被分配给一个所有者。
+   在系统启动过程中，所有的除了在CloudVisor中的页都被VMM拥有。当guest VM的EPT被第一次加载进处理器时，CloudVisor进入整个EPT来找到所有被映射的页。这些页被认为被分配给guest VM。CloudVisor改变这些页的所有者给guest VM，并且将它从VMM的EPT中取消映射，这样VMM就再也不够触及这些页了。当一个页从EPT中被取消映射时，页的所有者被设置成VMM，并且这个页在VMM的EPT中被重新映射。
+   无论何时VMM更新guest EPT，在EPT中的一个页错误（在Intel词汇中的EPT violation）会发生。CloudVisor通过验证页的所有者来处理错误。当一个新的映射被建立时，CloudVisor确保要被映射的页属于VMM。CloudVisor将它从VMM的EPT中取消映射，并且改变页的所有者给guest VM。当一个已存在的页被取消映射时，CloudVisor加密这个页的内容，把它映射到VMM中的EPT，并且改变VMM的页所有者。CloudVisor不允许一个页被映射到相同的EPT中超过一次。为了重新映射一个页，VMM需要首先取消映射它，然后将它重新映射到新的位置
 
+5.3合法内存存取
+   CloudVisor提供的内存隔离机制确保guest VM的整个内存空间不能被VMM和management VM存取。然而，有几种情况，VMM和management VM应当被允许存取guest VM的一些内存。在这样的情况下，CloudVisor干预并且帮助这样的存取来确保只有最小化的非敏感数据被泄露。
+   特权指令，比如IO指令和控制寄存器的存取会导致trap（如VM退出），这些trap会被VMM处理。在一些情况下，VMM在guest VM的内存中需要得到指令操作码来仿效它。在这样的trap中，CloudVisor取得特权操作码，并且将它提供给VMM。因为CloudVisor只允许获取被程序计数器指向的一个操作码，VMM就不能够欺骗CloudVisor来取得任意没有权利的操作码，也不能任意触发陷阱来得到操作码。
+   在一次trap中，故障指令的程序计数器是一个虚拟地址，并且内存操作数也被表达成虚拟的地址。VMM需要去查询guest VM中的页表来将虚拟地址翻译成guest物理地址，然后要进一步使用EPT翻译成host物理地址。为了处理这个情况，CloudVisor短暂地允许VMM来间接地读取操作码和内存操作数对应的guest页表条目。当一个trap由特权指令的执行产生时，CloudVisor得到指令的程序计数器并且分析这个指令来获取内存操作数。CloudVisor查询guest VM中的页表来获取需要的页表条目，来翻译程序计数器和内存操作数。当VMM存取页表时，CloudVisor提供给它先前获取的页表条目。为了减少跟特权指令仿真相关联的开销，CloudVisor使用一个缓冲区来高速缓冲每个VCPU的特权指令的页表条目。
+   仿效IO存取时，当VMM也需要得到guest IO的缓冲区内容。当VMM存取IO缓冲区时，一个EPT错误会发生，CloudVisor通过复制 给VMM的数据 来处理错误。确切地说，当VMM从或者向guest VM复制数据时，CloudVisor验证guest VM的缓冲区地址是一个已知的IO缓冲区，并且决定是否这个缓冲区被磁盘IO所用（部分6.1）。
 
-
-
+\fi
 
 
 
