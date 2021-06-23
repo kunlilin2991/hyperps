@@ -87,9 +87,21 @@ so that the HostOS kernel can still navigate and examine page table entries, whi
 Secondly, HyperPS removed all page table management functions and macros and replaces them with hooks that jump to HyperPS Space, so that any modification to the dedicated kernel page table in the normal space will be redirected to HyperPS Space. 
 HyperPS makes sure that the HostOS kernel can neither tamper the virtual memory permissions of the HyperPS Space, nor can it establish new mapping relationship to the physical memory frames related to the HyperPS Space. 
 In another word, the HostOS kernel page table are exclusively writable to HyperPS only. 
-Lastly, HyperPS deprives the HostOS kernel from executing certain MMU functions so that it cannot direct the CPU to use alternative page tables other than the dedicated one we put in the normal space. HyperPS instrumented 
+Lastly, HyperPS deprives the HostOS kernel from executing certain MMU functions so that it cannot direct the CPU to use alternative page tables other than the dedicated one we put in the normal space. 
+In this paper, HyperPS instrumented the kernel code to remove certain Control-Register-Relative functions. 
+For example, HyperPS instrumented the function \verb|write_cr3| to prevent the adversary from using a unverified page table. 
+HyperPS also intercept the accessing operation to Control Register: CR0 to prevent the adversary from disabling WP protection mechanism.
+% redirect the execution to HyperPS Space.
+% , such as the ones that change the vulue of CR0, CR3, and CR4.
+By enforcing these three steps, the HostOS kernel running in the normal space is neither allowed to modify the dedicated host kernel page table nor change the control register configurations to use unverified page tables. 
+As a result, the HostOS kernel cannot violate the isolation provided to HyperPS, since HyperPS deprives the HostOS kernel privileges of access to control registers and page tables and retains these privileges in the HyperPS Space.
 
+% As a result, the HostOS kernel cannot violate the isolation provided to HyperPS, while HyperPS retains the exclusive access to control the control registers and page tables in the HyperPS Space.
+% which
+% is deprived the privileges of accessing to control registers and page tables in the HyperPS Space.
+% retains the exclusive access to control the control registers and page tables in the HyperPS Space.
 
+\iffalse
 HyperPS makes sure that the HostOS kernel cannot modify any of the dedicated kernel page table to tamper the virtual memory access permissions of HyperPS Space. 
 
 memory region used by HyperPS are carved out of the memory ranges accessible to the kernel.
@@ -116,7 +128,7 @@ vmcs read write clear
 pfn modify map 
 clean page modify 
 ksm page modify
-
+\fi
 
 
 \iffalse
@@ -131,17 +143,43 @@ ksm page modify
 Traditional page tables continue to be reponsible for FVA-GPA, while EPT is responsible for GPA-HPA.
 \fi
 
-
+\iffalse
 As shown in the Figure \ref{fig:address}, HyperPS creates the delicate kernel-level secure and isolated execution space by using two sets of page tables. 
 On the left side of Figure \ref{fig:address}, the normal page table contains code and data of the HostOS kernel world. However, page table entries about the HyperPS Space has been removed from this table. %The attacker can not subvert the HyperPS Space 
 Because all corresponding page table entries have been removed, the attacker can not find out in which memory the HyperPS Space locates, let alone subvert programs in the HyperPS Space. 
 As shown in the Figure \ref{fig:address}, The Switch Gate is the only way that can perform the context switch from the Normal Space (the original hypervisor space) to the HyperPS Space.
 On the other side of Figure \ref{fig:address}, HyperPS safeguard the integral page tables which contain both the kernel code, data and the HyperPS code, data. Besides, HyperPS removed the execution permission of all kernel code to prevent unauthorized code execution.
+\fi
 
-\subsection{Creating Switch Gate}
+\subsection{Switch Gate}
+Switch Gate is designed to allow secure switching between HyperPS Space and the Normal Space, and it is the only interface between the Normal Space and the HyperPS Space. In this paper, HyperPS adopts a technique similar to the one presented in SKEE \ref{Azab2016SKEE}. Our Switch Gate can achieve atomic, deterministic and exclusive too.
+% Switch Gate is the only interface between the Normal Space and the HyperPS Space. HyperPS adopts a technique similar to the one presented in SKEE \ref{Azab2016SKEE}. In this paper, our Switch Gate is designed to allow secure switching between HyperPS Space and the Normal Space. Our Switch Gate is designed to be atomic, deterministic and exclusive too.
+As shown in the middle block of Figure \ref{fig:address}, the Switch Gate mainly consists of three parts: the Entry Gate, the Exit Gate and the Shared Buffer. 
+The Entry Gate provides the only entrance for HyperPS Space. The Entry Gate will save the HostOS kernel state into the Shared Buffer first. Secondly, it will clear and disable interrupts. Interrupts could enable the compromised HostOS kernel crash the atomic execution of Switch Gate. Then HyperPS will load the page table used by HyperPS Space into register CR3. The address of this page table is visible to HostOS kernel, however, as mentioned above, because all page table management functions and control register management function have been hooked by HyperPS, the compromised HostOS kernel cannot subvert the HyperPS Space by using unverified page tables. Lastly, we clear interrupts with \verb|CLI| instruction again before we divert execution into HyperPS Space. 
+The Exit Gate is the only interface that can divert execution back to Normal Space. It can only be invoked by HyperPS from the HyperPS Space. 
+On recieving the invocation to Exit Gate, 
+HyperPS will load the dedicated HostOS kernel page table into register CR3, recovere interrupts, and recover saved kernel state. 
+The Shared Buffer contains data and code shared by the Normal Space and the HyperPS Space. For example, as mentioned above, the entrance address of HyperPS Space and the return address to the Normal Space are stored in this buffer. HyperPS also stores the saved kernel state in this buffer. 
+% In our prototype, we mapped the Switch Gate at the same place in both Normal Space and the HyperPS Space.
+
+% The switch gate is mapped at the same place in the Normal Space and the HyperPS Space, because the switch gate code must be called by the two worlds before and after switching. Of course, the entrance address must be protected after switching to HyperPS Space in case that a attacker accesses HyperPS Space causally after trusted boot. Protection to Switch Gate will be illustrated in the Section \ref{sec:securityforhyperps}.
+
+
+
+% The shared buffer contains common data and code in Normal Space and the HyperPS Space. Common code is switch code, common data is entrance address to HyperPS Space and return address to the Normal World.
+% On invoking Exit Gate,
+% jump into
+%  before
+% address of page table
+
+% HyperPS achieves the atomic secure switching
+% Disabling interrupts
+% 为什么要屏蔽中断，这里要说清除。
+
+\iffalse
 In the middle of Figure \ref{fig:address}, the switch gate includes entry/exit gate and shared buffer. Entry gate provides the only entrance to HyperPS Space and the exit gate provides the address for returning to the Normal Space. The shared buffer contains common data and code in Normal Space and the HyperPS Space. Common code is switch code, common data is entrance address to HyperPS Space and return address to the Normal World. The switch gate is mapped at the same place in the Normal Space and the HyperPS Space, because the switch gate code must be called by the two worlds before and after switching. Of course, the entrance address must be protected after switching to HyperPS Space in case that a attacker accesses HyperPS Space causally after trusted boot. Protection to Switch Gate will be illustrated in the Section \ref{sec:securityforhyperps}.
-%FIXME 添加Section的引用
-
+%添加Section的引用
+\fi
 
 \iffalse
 except for that of HyperMI World. This can prevent compromised hypervisor from breaking the integrity of HyperMI World. Programs running in normal world can not access data in HyperMI World. On the right of Figure \ref{fig2}, all address is mapped in HyperMI page table.
