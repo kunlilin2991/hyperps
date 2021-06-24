@@ -77,20 +77,30 @@ However, at this time, this execution environment does not have the conditions f
 HyperPS has to guarantee that memory regions used by HyperPS are carved out of the memory ranges accessible to the kernel.
 In oder to achieve the isolation of the HyperPS Space, HyperPS restricts the compromised HostOS kernel access to this space. 
 % To protect HyperPS Space, firstly, we deprive the write permission to whole kernel page tables,
-Firstly, we deprive the write permission to whole kernel page tables, 
-so that the HostOS kernel can still navigate and examine page table entries, while direct write operations will trigger error. 
+Firstly, we remove write permissions to whole kernel page tables, so that the HostOS kernel can not modify the dedicated kernel page table in the Normal Space. In out prototype, the HostOS kernel can still navigate and examine page table entries, while write operations through legitimate page table management functions and macros are hooked and redirected into HyperPS Space. 
+Meanwhile, direct write operations to the dedicated kernel page table will trigger error. 
+% In our prototype, all page table write operations are completed inside the HyperPS Space.
 % any modification operation will
 % to
 % navigation and examination of page table entries
 % so that they are exclusively writable to HyperPS in the HyperPS Space.
 % To protect HyperPS Space, write permission to HostOS kernel page tables
-Secondly, HyperPS removed all page table management functions and macros and replaces them with hooks that jump to HyperPS Space, so that any modification to the dedicated kernel page table in the normal space will be redirected to HyperPS Space. 
+Secondly, as mentioned above, HyperPS removed all page table management functions and macros and replaces them with hooks that jump to HyperPS Space, so that any modification to the dedicated kernel page table in the normal space will be redirected to HyperPS Space. 
+For example, \verb|native_set_pte()| is the funtion that acutally implements PTE operations. Other PTE operation functions such as \verb|set_pte()| and \verb|native_set_pte_atomic()| all invoke the \verb|native_set_pte()| function to accomplish their implementation. 
+% implement their
+% will implement their operation by invoking this function.
+In our prototype, HyperPS hooks all these final and elemental page table management functions and macros.
+% For example, we hooked \verb|native_set_pte|, \verb|native_set_pmd| and \verb|do_page_fault|
 HyperPS makes sure that the HostOS kernel can neither tamper the virtual memory permissions of the HyperPS Space, nor can it establish new mapping relationship to the physical memory frames related to the HyperPS Space. 
+% For example,
 In another word, the HostOS kernel page table are exclusively writable to HyperPS only. 
-Lastly, HyperPS deprives the HostOS kernel from executing certain MMU functions so that it cannot direct the CPU to use alternative page tables other than the dedicated one we put in the normal space. 
-In this paper, HyperPS instrumented the kernel code to remove certain Control-Register-Relative functions. 
-For example, HyperPS instrumented the function \verb|write_cr3| to prevent the adversary from using a unverified page table. 
+Lastly, HyperPS deprives the HostOS kernel from executing certain Control-Register-Relative functions so that it cannot direct the CPU to use alternative page tables other than the dedicated one we put in the normal space. 
+% In this paper, HyperPS instrumented the kernel code to remove certain Control-Register-Relative functions.
+For example, \verb|native_write_cr3()| is written with inline assembly language to load page table's physical address into the register CR3. 
+HyperPS instrumented this function to prevnet the adversary from using a unverified page table. 
+% HyperPS instrumented the function \verb|native_write_cr3| to prevent the adversary from using a unverified page table.
 HyperPS also intercept the accessing operation to Control Register: CR0 to prevent the adversary from disabling WP protection mechanism.
+Actually, HyperPS hooked \verb|native_write_cr0()|, \verb|native_write_cr2()|, \verb|native_write_cr3()|, and \verb|native_write_cr4()| to HyperPS Space.
 % redirect the execution to HyperPS Space.
 % , such as the ones that change the vulue of CR0, CR3, and CR4.
 By enforcing these three steps, the HostOS kernel running in the normal space is neither allowed to modify the dedicated host kernel page table nor change the control register configurations to use unverified page tables. 
@@ -100,6 +110,8 @@ As a result, the HostOS kernel cannot violate the isolation provided to HyperPS,
 % which
 % is deprived the privileges of accessing to control registers and page tables in the HyperPS Space.
 % retains the exclusive access to control the control registers and page tables in the HyperPS Space.
+
+
 
 \iffalse
 HyperPS makes sure that the HostOS kernel cannot modify any of the dedicated kernel page table to tamper the virtual memory access permissions of HyperPS Space. 
@@ -155,12 +167,24 @@ On the other side of Figure \ref{fig:address}, HyperPS safeguard the integral pa
 Switch Gate is designed to allow secure switching between HyperPS Space and the Normal Space, and it is the only interface between the Normal Space and the HyperPS Space. In this paper, HyperPS adopts a technique similar to the one presented in SKEE \ref{Azab2016SKEE}. Our Switch Gate can achieve atomic, deterministic and exclusive too.
 % Switch Gate is the only interface between the Normal Space and the HyperPS Space. HyperPS adopts a technique similar to the one presented in SKEE \ref{Azab2016SKEE}. In this paper, our Switch Gate is designed to allow secure switching between HyperPS Space and the Normal Space. Our Switch Gate is designed to be atomic, deterministic and exclusive too.
 As shown in the middle block of Figure \ref{fig:address}, the Switch Gate mainly consists of three parts: the Entry Gate, the Exit Gate and the Shared Buffer. 
-The Entry Gate provides the only entrance for HyperPS Space. The Entry Gate will save the HostOS kernel state into the Shared Buffer first. Secondly, it will clear and disable interrupts. Interrupts could enable the compromised HostOS kernel crash the atomic execution of Switch Gate. Then HyperPS will load the page table used by HyperPS Space into register CR3. The address of this page table is visible to HostOS kernel, however, as mentioned above, because all page table management functions and control register management function have been hooked by HyperPS, the compromised HostOS kernel cannot subvert the HyperPS Space by using unverified page tables. Lastly, we clear interrupts with \verb|CLI| instruction again before we divert execution into HyperPS Space. 
+The Entry Gate provides the only entrance for HyperPS Space. The Entry Gate will save the HostOS kernel state into the Shared Buffer first. Secondly, it will clear and disable interrupts. Interrupts could enable the compromised HostOS kernel crash the atomic execution of Switch Gate. 
+Then HyperPS will enter the HyperPS Space by loading the page table used by HyperPS Space into register Cr3. 
+% load the page table used by HyperPS Space into register CR3.
+The address of this page table is visible to HostOS kernel, however, as mentioned above, because all page table management functions and control register management function have been hooked by HyperPS, the compromised HostOS kernel cannot subvert the HyperPS Space by using unverified page tables. 
+Lastly, we clear interrupts with \verb|CLI| instruction again before we execute any instruction in the HyperPS Space. 
+% divert execution into HyperPS Space.
 The Exit Gate is the only interface that can divert execution back to Normal Space. It can only be invoked by HyperPS from the HyperPS Space. 
 On recieving the invocation to Exit Gate, 
 HyperPS will load the dedicated HostOS kernel page table into register CR3, recovere interrupts, and recover saved kernel state. 
 The Shared Buffer contains data and code shared by the Normal Space and the HyperPS Space. For example, as mentioned above, the entrance address of HyperPS Space and the return address to the Normal Space are stored in this buffer. HyperPS also stores the saved kernel state in this buffer. 
 % In our prototype, we mapped the Switch Gate at the same place in both Normal Space and the HyperPS Space.
+
+However, TLB becomes a subtle issue in the implementation of our Switch Gate. TLB is a special cache used to keep track of recently used PTE transactions.
+Given a virtual address, the processor wll first examine the TLB if a PTE is present (TLB hit). If a match is found in the TLB, the processor retrieves the corresponding physical memory frame number from TLB directly. If the mapping is not cached by the TLB, the processor retrieves the physical memory page number from page table residing in the main memory and updates the new PTE into TLB. Thus, we need to flush TLB after we update both dedicated HostOS kernel page table and the page table used by HyperPS. 
+In our prototype, we borrowed the idea in SecPod that clears the global bits in both the dedicated HostOS kernel page table and the HyperPS Space page table. By doing so, the TLB will always contain fresh address mappings after invoking the function\verb|flush_tlb_all()|.
+% n HyperPS Space and
+
+% there is one subtle issue in the implementation of the Switch Gate
 
 % The switch gate is mapped at the same place in the Normal Space and the HyperPS Space, because the switch gate code must be called by the two worlds before and after switching. Of course, the entrance address must be protected after switching to HyperPS Space in case that a attacker accesses HyperPS Space causally after trusted boot. Protection to Switch Gate will be illustrated in the Section \ref{sec:securityforhyperps}.
 
@@ -192,6 +216,32 @@ HyperMI code remains executable and HyperMI data remains writable. What's the mo
 In the middle of Figure \ref{fig2}, the switch gate includes entry/exit gate and shared buffer. Entry gate provides the only entrance to HyperMI World and the exit gate provides the address for returning to the normal world. The shared buffer contains common data and code in normal world and HyperMI World. Common code is switch code, common data is entrance address to HyperMI World and return address to the normal world. The switch gate is mapped at the same place in the normal world and HyperMI World because the switch gate code must be called by the two worlds before and after switching. Of course, the entrance address must be protected after switching to HyperMI World in case that a attacker accesses HyperMI World causally after trusted boot. This is introduced in section \ref{SG}.
 \fi
 
+
+
+\iffalse
+下面的这部分内容应该是保护的内容，涉及的是EPT和缺页中断的处理，不应该是地址空间创建这部分内容。
+在QEMU-KVM架构下，一台虚拟机的memory space同时受宿主机的page table和EPT两套页表管理。
+% 在non-root模式下，
+对于宿主机而言，虚拟机就是一个qemu进程，这个与其他的普通进程没有区别，宿主机通过传统的页表管理qemu所需要的所有地址空间。hostOS负责实际分配给该虚拟机的所有物理页框。
+当EPT enable的时候，
+在root模式下，EPT负责将qemu进程的
+
+在QEMU-KVM架构下，以HostOS 视角看，整个虚拟机即为一个QEMU进程，EPT用于管理已经分配给QMEU进程中的物理页。
+Traditional page tables continue to be reponsible for FVA-GPA, while EPT is responsible for GPA-HPA.
+\fi
+
+
+\iffalse 
+
+实现了虚拟机的隔离主要通过保护和隔离EPT和虚拟机内存来完成，主要完成4部分，1）实现vm-mark表，将VM与EPT进行绑定确保各虚拟机只能访问自己的EPT。2）hyperps剥离了EPT相关的所有访问函数，保证ept表的安全访问。以防被恶意更改。3）页分配时实现page-mark表，来标注page唯一的属主vm，保证vm-ept-page的一致性。在页分配时验证页的属主，空页绑定页与vm，非空页验证属主，以免页被重新分配。4）页释放时清除页内容。如果原vm的内容页在释放时未被清除，当该页再次分配给其余虚拟机时，其上的内容可能被恶意虚拟机读取而泄露数据。
+
+We propose ept isolation and vm isolation by preventing ept access and released vm page access , following the steps. 1) Guarantee the consistency of vm and ept. Making vm-ept mark table to ensure EPT isolation and one VM only access own corresponding EPT. 2) Strips ept access privilege. Strips all access functions related to EPT to ensure safe access and to ept and prevent malicious changes. 3) Page-mark table. The page-mark table is created marking the unique owner vm of the page during page allocation. So the consistency of vm-ept-page can ensure ept isolation and vm isolation, one vm can only access own ept and own pages. During page allocation, the owner of the page is verified, empty pages are bound to the vm directly, and the allocated page is discarded to prevent the page from being remapped. 4)Clear page content when released. If the content page of the original vm is not cleared after being released, after allocated to other virtual machines again, the content on the page may be read by a malicious virtual machine so that privacy data may be leaked.
+ 
+It is important to ensure EPT isolation and one VM only access own corresponding EPT. To ensure one EPT for one VM, HyperPS creates the VM-Mark structure stored in HyperPS World as Table I described. It records VMID, EPTID, EPT Address and binds them together. VMID is created when the VM is created. EPTID and EPT Address is recorded as long as the EPT of current VM is created. This table is destroy once the VM is shutdown or destroyed.
+ 
+Vm-ept mark table is hidden in hyperps world. all access functions for EPT address must be executed in hyperps world. When EPT is created, use the hash function to construct the ID number of the ept according to the ept address, bind it to the current VMID as a structure, the relationship between VM and EPT is established. Other access functions of EPT, such as reading and writing,updating will be executed  in hyperps wolrd for safety.
+Stripping EPT's access capability can prevent attackers from tampering with EPT. When 
+\fi
 
 
 
