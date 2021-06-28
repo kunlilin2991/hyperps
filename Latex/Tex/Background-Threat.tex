@@ -47,6 +47,14 @@ In addition to translating a guest-physical address to a physical address, EPT s
 A compromised Hostos/hypervisor could tramper EPT paging structures so that the virtual machine will execute arbitrary malicious code without knowing it. 
 Moreover, a compromised Hostos/Hypervisor could access any data in the guest virtual machine with the help of virtual machine introspection.
 
+\iffalse
+\subsubsection{EPT Address Translation Mechanism}%
+\label{ssub:ept_address_translation_mechanism}
+When a logical CPU executes the guest code in non-root mode, the CPU loads the guest CR3 of the client process. Since the guest CR3 is a Guest Physical Address (GPA), the CPU needs to query the EPT page table to implement the guest CR3 GPA->HPA (Host Physical Adddress) conversion. 
+the address used is the guest virtual address. the CPU in 
+\fi
+
+
 
 \subsubsection{EPTP Management}%
 \label{ssub:eptp_management}
