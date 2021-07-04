@@ -86,7 +86,7 @@ Meanwhile, direct write operations to the dedicated kernel page table will trigg
 % so that they are exclusively writable to HyperPS in the HyperPS Space.
 % To protect HyperPS Space, write permission to HostOS kernel page tables
 Secondly, as mentioned above, HyperPS removed all page table management functions and macros and replaces them with hooks that jump to HyperPS Space, so that any modification to the dedicated kernel page table in the normal space will be redirected to HyperPS Space. 
-For example, \verb|native_set_pte()| is the funtion that acutally implements PTE operations. Other PTE operation functions such as \verb|set_pte()| and \verb|native_set_pte_atomic()| all invoke the \verb|native_set_pte()| function to accomplish their implementation. 
+For example, \verb|native_set_pte()| is the function that acutally implements PTE operations. Other PTE operation functions such as \verb|set_pte()| and \verb|native_set_pte_atomic()| all invoke the \verb|native_set_pte()| function to accomplish their implementation. 
 % implement their
 % will implement their operation by invoking this function.
 In our prototype, HyperPS hooks all these final and elemental page table management functions and macros.
@@ -181,7 +181,7 @@ The Shared Buffer contains data and code shared by the Normal Space and the Hype
 
 However, TLB becomes a subtle issue in the implementation of our Switch Gate. TLB is a special cache used to keep track of recently used PTE transactions.
 Given a virtual address, the processor wll first examine the TLB if a PTE is present (TLB hit). If a match is found in the TLB, the processor retrieves the corresponding physical memory frame number from TLB directly. If the mapping is not cached by the TLB, the processor retrieves the physical memory page number from page table residing in the main memory and updates the new PTE into TLB. Thus, we need to flush TLB after we update both dedicated HostOS kernel page table and the page table used by HyperPS. 
-In our prototype, we borrowed the idea in SecPod that clears the global bits in both the dedicated HostOS kernel page table and the HyperPS Space page table. By doing so, the TLB will always contain fresh address mappings after invoking the function\verb|flush_tlb_all()|.
+In our prototype, we borrowed the idea in SecPod that clears the global bits in both the dedicated HostOS kernel page table and the HyperPS Space page table. By doing so, the TLB will always contain fresh address mappings after invoking the function \verb|flush_tlb_all()|.
 % n HyperPS Space and
 
 % there is one subtle issue in the implementation of the Switch Gate
@@ -218,6 +218,8 @@ In the middle of Figure \ref{fig2}, the switch gate includes entry/exit gate and
 
 
 
+
+
 \iffalse
 下面的这部分内容应该是保护的内容，涉及的是EPT和缺页中断的处理，不应该是地址空间创建这部分内容。
 在QEMU-KVM架构下，一台虚拟机的memory space同时受宿主机的page table和EPT两套页表管理。
@@ -229,6 +231,204 @@ In the middle of Figure \ref{fig2}, the switch gate includes entry/exit gate and
 在QEMU-KVM架构下，以HostOS 视角看，整个虚拟机即为一个QEMU进程，EPT用于管理已经分配给QMEU进程中的物理页。
 Traditional page tables continue to be reponsible for FVA-GPA, while EPT is responsible for GPA-HPA.
 \fi
+
+
+\iffalse
+###################
+三个章节的内容
+KVM 函数hook 
+EPT处理流程
+KSM是特别要处理的内容
+###################
+\fi
+
+In HyperPS, the HostOS has been deprived of the privileges on managing EPTs. This give HyperPS full control over the guest VM's virtual-physical memory mapping and protection. In our prototype, we hook all KVM's VMX and EPT functions to redirect EPT management to our HyperPS Space.
+
+% TODO 上面说要保护管理EPT，但是这里为什么要从VMCS入手，这里要说明
+Based on Intel manuals, VMCS can only be manipulated by several privileged instructions: \verb|VMPTRLD|, \verb|VMCLEAR| \verb|VMPTRLD|, \verb|VMREAD|, \verb|VMWRITE|, \verb|VMLAUNCH|, and so on.
+In the QEMU-KVM architecture, the KVM provdes a wrapper around these privileged instructions. The QEMU does not need to deal architecture specific details, it just need to invoke the wrapper functions in KVM with proper parameters.
+% the KVM is responsible for executing these privileged instructions. The KVM provdes a wrapper around these privileged instructions. The QEMU does not need to deal architecture specific details, it just need to invoke KVM functions with proper parameters.
+In Linux, all VMX operation functions are defined in the file \verb|vmx_ops.h|. 
+For example, \verb|vmcs_writel()| wraps the privileged instruction \verb|VMWRITE|, it will update the specified field of a VMCS with a given value. 
+% the value to a VMCS filed
+\verb|__vmcs_readl()| is one of wrapper functions to the privileged instruction \verb|VMREAD|, this function reads a field from a VMCS and returns field value. 
+% it into
+In our prototype, we implement all VMX functions in Normal Space with hooks to HyperPS Space to provide all VMX services. 
+In particular, we prevent the HostOS/Hypervisor from loading a unverified EPTP. 
+HyperPS interposes the execution of \verb|vmcs_writel()|, and the Context Management in the HyperPS Space Management component check the invoked parameters and verifies if the write to \verb|VM-Execution Control Fields.EPTP| is legal or not. 
+HyperPS also forbids arbitrary write to the \verb|VM-Function Controls| field in \verb|VM-Execution Control Fields|.
+The field \verb|VM-Function Controls| contains the physical address of the 4-KByte EPTP list. Invalid value in the EPTP list may lead to unverified EPTP value. 
+
+
+
+In this paper, because EPTs have been removed from the Normal Space, 
+HyperPS needs to hooks EPT functions that access to EPTP and EPT Paging Structures to HyperPS Space, and implement these services in the HyperPS Space.
+In QEMU-KVM architecture, the KVM is the componet that maintainS EPTs while QEMU is responsible for requesting for memory allocation.
+Thus, in our prototype, we dig into KVM to find out all functions that process EPTPs and EPTs directly. Figure \ref{fig:impept} depicts how HyperPS handles all EPT management functions. 
+
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=0.8\linewidth]{./IMG/imp-ept-handle.pdf}
+    \caption{HyperPS EPT Procedure}%
+    \label{fig:impept}
+\end{figure}
+
+% MMU Initialization:
+EPT Creation: The KVM will create and initialize MMU along with the creation of vcpu. 
+If the EPT is supported and enabled by the hardware, The KVM module will invoke the function \verb|init_kvm_tdp_mmu| to initialize the MMU. 
+Actually, the function \verb|init_kvm_tdp_mmu()| is just responsible for registering all kinds of EPT management functions to the inputted vcpu management structure: \verb|vcpu->arch.mmu|. 
+For example, the EPT page fault function is initialized to \verb|kvm_tdp_page_fault()|, meanwhile inject page fault function is initialized to \verb|kvm_inject_page_fault()|. 
+In our prototype, we hooked all these registered functions into HyperPS Space. However, it is far from sufficient to hook these functions only. We need to dig into the internal of these functions to find out all surplus functions that access VMCS or EPT directly.
+
+Besides, in this paper, we implement a new structure VM-Mark Table to guarantee the legitimate relationship between the VM and the EPT. 
+During the creation of EPT, the function \verb|vmx_load_mmu_pgd()| is responsible for writing the newly created EPTP to the corresponding VMCS.
+In our prototype, as shown in Figure \ref{fig:impept}, we hooked this function into the HyperPS Space. In the HyperPS Space, we also implemented our protection that stores and synchronizes the corresponding EPTP value and VM identifier to VM-Mark Table. 
+
+
+% we also hooked the function \verb|vmx_load_mmu_pgd()|, which will write the new created EPTP to the corresponding VMCS.
+% In our prototype, as shown in Figure \ref{fig:impept}, we will store and synchronize the corresponding EPTP value and VM identifier to VM-Mark Table.
+% guarantee that only legitimate EPTP can be loaded
+% Actually, the \verb|init_kvm_tdp_mmu()| just registers lots of exception handling functions, such as \verb|kvm_tdp_page_fault()| to a stucture \verb|vcpu->arch.mmu|.
+% If the EPT is supported, the function \verb|init_kvm_tdp_mmu| is responsible for initializing the MMU.
+Runtime EPT Management: 
+As shown in Figure \ref{fig:impept}, we classified all EPT management operations into five types: Page Fault, Update, Traverse, Load and Free. 
+In our prototype, because EPT and EPTP have been removed from the Normal Space, we have to hook all these functions into the HyperPS Space and implement  the respective EPT access services in the HyperPS Space. 
+
+
+% EPT Construction Process:
+EPT Page fault:
+The KVM adopts the similar page table construction process to the kernel page table that fills EPT paging structures by handling EPT page fault. 
+As mentioned above, if the EPT page fault occurs, the KVM invokes the function \verb|kvm_tdp_page_fault()| to handle this exception. 
+% As mentioned above, the KVM invokes the function \verb|kvm_tdp_page_fault()| to handle EPT page fault.
+Normally, the KVM is not responsible for the allocation of physical pages, what KVM does is to synchronize the allocated physical page frame number (PFN) to the corresponding EPT paging-structure. We classify EPT operations in EPT Page Fault into Update. 
+In virtualization environment, there is a memory reclamation technique, called Ballooning, that is used by the hypervisor to allow the physical host system to retrieve memories from certain guest virtual machine and share them with others. 
+However, Ballooning may be abused to facilitate side channel attacks. 
+In this paper, we take such situation into consideration. As depicted in Figure ref{fig:impept}, 
+HyperPS will format the allocated physical memory frame before mapping it in the EPT during executing the function \verb|kvm_tdp_page_fault()|. More details are illustrated in Section . 
+% TODO 添加章节的引用
+% we hook the function \verb|kvm_tdp_page_fault()| into HyperPS Space, and format the allocated physical memory frame before mapping it in the EPT in this function.
+% HyperPS will formate the
+% different virtual machines shared the same physical memory.
+
+EPT Traverse: 
+% Though HyperPS does not interpose the traversal of EPT,
+Because all EPTs have been moved from the Normal Space to the HyperPS Space, though HyperPS does not interpose the traversal of EPT, HyperPS also need to instrument EPT traversal funtions, so that they can access EPTs. 
+However, we do not need to re-implement EPT traversal services in the HyperPS Space. In our prototype, we just implement a hook function that will invokes the Switch Gate to retrieve the corresponding EPTP value or EPT Paging Structure value. 
+For example, the function \verb|shadow_walk_init()| is responsible for initializing the struct \verb|kvm_shadow_walk_iterator| structure which will record the vaule of EPTP and be used in the traversal of EPTs. We added the hook funtion inside the function \verb|shadow_walk_init()| to access EPT in HyperPS Space. 
+
+EPT Load: 
+In this paper, we propose a VM-Mark table to tag the mapping relations between the EPT and the corresponding virtual machine. 
+HyperPS will be engaged to check whether the loaded EPT corresponds to the virtual machine at every time the virtual is going to executing VM-Entry. 
+\verb|vcpu_enter_guest()| is an arch-specific function in KVM to start up a virtual machine. 
+As depected in Figure \ref{fig:impept}, we placed a hook before executing the funtion \verb|vmx_load_mmu_pgd()| inside this function. The function \verb|vmx_load_mmu_pgd()| is the final function that load the EPT. 
+If the EPTP (the base address of the EPT) matches an item in the VM-Mark Table, HyperPS will allow the subsequent operations, such as EPTP Switch and EPT Load, otherwise HyperPS will terminate the execution of the corresponding virtual machine. 
+
+EPT Update: 
+In this paper, we propose a new structure: Page-Mark Table to record the relationships between EPT paging-structures and the physical memory page frames. 
+HyperPS guarantees that physical page frame with write permission can only be accessed with one determinate VM. 
+Physical page frames shared by different machines can only be read-only. 
+Besides, HyperPS guarantees that virtual machines participating the memory sharing are authenticated and recorded by us. 
+Figure \ref{fig:impept} depicts the rough process of how HyperPS handles EPT Update. 
+As mentioned above, in this paper, in addition to changing the permissions of EPT entries, HyperPS also regards the allocation of a new EPT paging-structure as EPT Update. 
+In our prototype, we do not get involved in new physical memory page frame allocation, we focus on operations to EPTs only. 
+The function \verb|__direct_map()| in KVM is the core function to build new EPT entries. HyperPS places hooks inside this function to perfrom security checks. If the allocated physical frame number is untracked in the Page-Mark Table, HyperPS will first invokes the function mentioned above to format this allocated physical page. Then, HyperPS hooks the function \verb|kvm_mmu_get_page()|, the function \verb|link_shadow_page()|, and the function \verb|mmu_set_spte()| into the HyperPS Space.
+In the HyperPS Space, HyperPS will initialize a new EPT paging-structure, and link it the EPT.
+% and link it to the corresponding
+
+\iffalse
+access to one VM or shared with
+the effective isolation between diffe
+In this paper, we define EPT Update as assigning a new EPT paging-structure or updating EPT paging-structures. 
+\verb|__direct_map()| is the core function to build the page table.
+\verb|kvm_mmu_get_page()| 分配一个EPT 页表项 
+\verb|link_shadow_page()| 将新分配到下一级页表页的基地址填充到当前页表项SPTE中
+
+\verb|mmu_set_spte| is the final calling function to set the page table structure. 
+\fi
+
+\iffalse
+if the the EPT and the 
+every time a virtual machine is going to be loaded into Non-Root model. 
+\verb|vcpu_enter_guest()| is an arch-specific function in KVM to start up a virtual machine. 
+In this function, we placed a hook before executing the funtion \verb|vmx_load_mmu_pgd()| inside this function. 
+This function will will invoke the function \verb|vmx_load_mmu_pgd()| to load the EPT. 
+The KVM will invoke the function \verb|vcpu_enter_guest()| to 
+to load the corresponding EPT 
+Every time the virtual machine runs, execute \verb|vcpu_enter_guest()|, this function load EPT.
+EPT traversal functions in HyperPS Space.
+In our prototype, we do not re-implement all EPT traversal functions in HyperPS Space, but just implement a hook function to retrieve
+to hook these EPT traversal functions. 
+In our prototype, we 
+The stucture \verb|kvm_shadow_walk_iterator| is the most important structure used in the traversal of the EPT. 
+This structure recordes the value of EPTP. 
+% In our prototype,
+
+
+When Guest Address has EPT Violation, KVM uses \verb|kvm_shadow_walk_iterator| to complete the traversal of the EPT, look up the page table entry EPT corresponding to Guest Address step by step, and finally index to the corresponding page table entry in the leaf page table to get the Guest Address corresponding the number of the page frame.
+The function \verb|shadow_walk_init()| takes the physical address of the guest where the EPT Violation occurred and the VCPU with EPT Violation as input. 
+This function is responsible for initializing the struct \verb|kvm_shadow_walk_iterator| structure, preparing to traverse the EPT page table.
+
+In this paper, HyperPS does not hook EPT traversal functions, such as data structure \verb|kvm_shadow_walk_iterator()| in KVM. 
+\verb|kvm_walk_init_using_root()| takes \verb|kvm_shadow_walk_iterator| as input. 
+\verb|shadow_walk_okay()| \verb|shadow_walk_next()|
+
+\verb|kvm_shadow_walk_iterator| records the vaule of EPTP
+\fi
+% It just maintains EPTs. Thus,
+% what the KVM does in Page Fault Handling is similar to
+% As shown in Figure \ref{fig:impept}, we interfere in the EPT
+% The EPT paging structures are also completed by handing page fault exceptions.
+% the KVM is not responsible for the allocation of physical pages. It just maintains EPTs.
+% Memory allocation are completed with QEMU and the HostOS Kernel.
+% after the QEMU requested allocation
+\iffalse
+\verb|__direct_map()| is the core function to build the page table.
+\verb|kvm_mmu_get_page()| 分配一个EPT 页表项 
+\verb|link_shadow_page()| 将新分配到下一级页表页的基地址填充到当前页表项SPTE中
+
+\verb|mmu_set_spte| is the final calling function to set the page table structure. 
+
+HyperPS needs to hooks all EPT management function in the Normal Space to HyperPS Space. 
+EPT Creation: 
+% we hooked all EPT management operation functions.
+
+If the EPT is supported, the function \verb|init_kvm_tdp_mmu| is responsible for initalizing the MMU. 
+
+Though HyperPS does not interpose the traversal of EPT, Because all EPTs have been moved from the Normal Space to the HyperPS Space, HyperPS also need to hook these EPT traversal functions. 
+
+When Guest Address has EPT Violation, KVM uses \verb|kvm_shadow_walk_iterator| to complete the traversal of the EPT, look up the page table entry EPT corresponding to Guest Address step by step, and finally index to the corresponding page table entry in the leaf page table to get the Guest Address corresponding the number of the page frame.
+The function \verb|shadow_walk_init()| takes the physical address of the guest where the EPT Violation occurred and the VCPU with EPT Violation as input. 
+This function is responsible for initializing the struct \verb|kvm_shadow_walk_iterator| structure, preparing to traverse the EPT page table.
+
+In this paper, HyperPS does not hook EPT traversal functions, such as data structure \verb|kvm_shadow_walk_iterator()| in KVM. 
+\verb|kvm_walk_init_using_root()| takes \verb|kvm_shadow_walk_iterator| as input. 
+\verb|shadow_walk_okay()| \verb|shadow_walk_next()|
+
+\verb|kvm_shadow_walk_iterator| records the vaule of EPTP
+
+every time the virtual machine runs, execute \verb|vcpu_enter_guest()|, this function load EPT.
+
+transfer \verb|kvm_mmu_load()| set customer CR3
+
+KVM is not responsible for the allocation of physical pages, but maintains EPT. 
+
+\verb|hva_to_pfn()|: get the host physical page frame number from the host vurtual address.
+
+\verb|__direct_map()| is the core function to build the page table.
+\verb|kvm_mmu_get_page()| 分配一个EPT 页表项 
+\verb|link_shadow_page()| 将新分配到下一级页表页的基地址填充到当前页表项SPTE中
+
+\verb|mmu_set_spte| is the final calling function to set the page table structure. 
+
+when the page is invalid, it will eventually call \verb|kvm_mmu_free_page()| recycling, here is mainly to see when it will be recycled
+when EPT is loaded, \verb|mmu_load_direct_root()| \verb|make_mmu_page_available|.
+\fi
+
+% which will crash
+% HyperPS instrumented this function to prevnet the adversary from using a unverified page table.
+% the respective hooked functions
+% HyperPS hooks these functions into the HyperPS Space. In the HyperPS Space, Context Management in the HyperPS Space Management component check the invoked parameters and verifies if the write to \verb|VM-Execution Control Fields.EPTP| is legal or not.
+
 
 
 \iffalse 

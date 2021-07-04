@@ -30,25 +30,30 @@ In this section, we first propose the architecture of HyperPS. Then, in the foll
 % As shown in Figure, 我们创造了一个同层隔离空间用于履行原本属于compromised HostOS的管理虚拟机物理内存的权力。
 
 
-We present HyperPS to protect guest virtual machines against compromised hypervisor. In virtualization environment, the hyperivor deprivileges the guest VM’s kernel and interposes all interactions between guest VMs and the physical memory. Neither isolation between VMs nor virtual-physical mapping relationships in a VM will inevitable be tamperred if the hypervisor has been compromised. HyperPS, thus, deprives the hypervisor of privileges on managing physical memory.
+% We present HyperPS to protect guest virtual machines against compromised hypervisor. In virtualization environment, the hyperivor deprivileges the guest VM’s kernel and interposes all interactions between guest VMs and the physical memory. Neither isolation between VMs nor virtual-physical mapping relationships in a VM will inevitable be tamperred if the hypervisor has been compromised. HyperPS, thus, deprives the hypervisor of privileges on managing physical memory.
 
+In a virtualization environment, the HostOS/hyperivor deprivileges the guest VM’s kernel and interposes all interactions between guest VMs and the physical memory. 
+If the HostOS/hypervisor has been compromised, both isolation between VMs and virtual-physical mapping relationships for a VM will inevitable be tamperred. 
+Thus, in this paper, we present HyperPS to deprive the hypervisor of privileges on managing physical memory.
+
+% Neither isolation between VMs nor virtual-physical mapping relationships in a VM will inevitable be tamperred if the hypervisor has been compromised.
 
 Figure \ref{fig:design} depicts the details on the architecture of HyperPS. 
 Firstly, as shown in Figure \ref{fig:design}, we create a delicate kernel-level secure and isolated execution space, called HyperPS Space, to inherit privileges of managing physical memory that originally belonged to the compromised hypervisor. 
-Original funtions about physical memory management in the compromised hypervisor, such as EPT operations, EPTP switching operations, and some VMCS operations, are hooked into the HyperPS space. 
-However, there are still some cases where attackers subvert memory management data structures by using regular memory access, attackers can also bypass the hooked functions by introducing new malicious VMX assembly code. HyperPS, in consideration of these cases, removed VMCS and EPT from the original hypervisor space and placed them in the HyperPS space. 
+Original funtions about physical memory management in the compromised hypervisor, such as EPT operations, EPTP switching operations, and some VMCS operations, are hooked into the HyperPS Space. 
+However, there are still some cases where attackers subvert memory management data structures by using regular memory access, attackers can also bypass the hooked functions by introducing new malicious VMX assembly code. HyperPS, in consideration of these cases, removed VMCS and EPT from the original hypervisor space and placed them in the HyperPS Space. 
 % For cases where attackers subvert memory management data structures by using regular memory access, and cases where attackers bypass the hooked functions by introducing new malicious VMX assembly code
 % use regular memory access to tamper with
 % For cases where an attacker uses regular memory access or newly introduced malicious VMX assembly code to bypass the hooked functions and tamper with the relevant memory management data structures, HyperPS removed VMCS and EPT, which are crucial to virtualization, from the original hypervisor space and places them in the HyperPS Space.
-Secondly, in the HyperPS space, we introduce two new data structures, called Page-Mark structure and VM-Mark structure, to tag the mapping relations between the physical frames and the virtual machines. With the help of these two data structures, even if an attacker attempts to tamper EPT Paging Structures with malicious value through a legal function, HyperPS can still effectively detect such attack and resist it.
-Lastly, Switch Gate is the only interface between the kernel space and the HyperPS space.
+Secondly, in the HyperPS Space, we introduce two new data structures, called Page-Mark structure and VM-Mark structure, to tag the mapping relations between the physical frames and the virtual machines. With the help of these two data structures, even if an attacker attempts to tamper EPT Paging Structures with malicious value through a legal function, HyperPS can still effectively detect such attack and resist it.
+Lastly, Switch Gate is the only interface between the kernel space and the HyperPS Space.
 
 %FIXME 图中的内容添加虚拟机退出的线，removed的字段加粗 pptt是表 修改成表的形式
 
 \begin{figure*}[htpb]
     \centering
     \includegraphics[width=0.9\linewidth]{IMG/newdesign.pdf}
-    \caption{HyperPS Architecture  \\ HyperPS is committed to protect guest virtual machine under the compromised HostOS/Hypervisor. Privileges to manage VMCS and EPT are stripped from the compromised HostOS/Hypervisor into a separated and secure execution environment: HyperPS Space. The HyperPS space shares the same processor privilege as the HostOS. HyperPS does not rely on any special hardware or a higher privilege. Updates to VMCS and EPT are abandoned by the HyperPS, if the operations are not authorized or are adjudged as harmful to virtual machine.}%
+    \caption{HyperPS Architecture  \\ HyperPS is committed to protect guest virtual machine under the compromised HostOS/Hypervisor. Privileges to manage VMCS and EPT are stripped from the compromised HostOS/Hypervisor into a separated and secure execution environment: HyperPS Space. The HyperPS Space shares the same processor privilege as the HostOS. HyperPS does not rely on any special hardware or a higher privilege. Updates to VMCS and EPT are abandoned by the HyperPS, if the operations are not authorized or are adjudged as harmful to virtual machine.}%
     \label{fig:design}
 \end{figure*}
 
@@ -73,7 +78,7 @@ Lastly, Switch Gate is the only interface between the kernel space and the Hyper
 EPT defines a layer of address translation that augments the translation of linear addresses. 
 The EPT mechanism is a feature that can be used to support the virtualization of physical memory. When EPT is in use, certain addresses that would mormally be treated as physical addresses (and used to access memory) are instead trated as guest-physical addresses. Guest-physical addresses are tranlated by traversing a set of EPT paging structures to produce physical addresses that are used to access memory.
 It's EPT mechanism that treat guest-physical address like a virtual address and the EPTP is the CR3.
-we should write (VMWRITE) EPTP to the VMCS. 
+we should write (\verb|VMWRITE|) EPTP to the VMCS. 
 \fi
 
 % According to the Intel manual, the EPT mechanism is a core feature that is used to support the virtualization of physical memory.
@@ -113,7 +118,7 @@ we should write (VMWRITE) EPTP to the VMCS.
 \fi
 
 
-Firstly, HyperPS removed all EPTs and VMCSes from the hypervisor space. EPT manages all physical memory of the VM, as mentioned above, HyperPS removed themfrom the hypervisor space. However, there is a hardware register, called Extended Page Table Pointer (EPTP), that contains the address of the base of EPT table, as well as EPT configuration information. Simple obliteration of EPT would make EPTP error which will crash the whole virtualization environment too. 
+Firstly, HyperPS removed all EPTs and VMCSes from the hypervisor space. EPT manages all physical memory of the VM, as mentioned above, HyperPS removed them from the hypervisor space. However, there is a hardware register, called Extended Page Table Pointer (EPTP), that contains the address of the base of EPT table, as well as EPT configuration information. Simple obliteration of EPT would make EPTP error which will crash the whole virtualization environment too. 
 Besides, the VMCS records the value of EPTP in the VM-Execution Control Fields. The processor will load the value in that field into the hardware register when VM-Entry. 
 Even if the attacker cannot directly tamper the EPT, he can also subvert the guest VMs by tampering with a malicious EPTP value in the VMCS. Thus, HyperPS removed all VMCSes from the hypervisor too. 
 % The adversary can tamper with the EPTP value in the VMCS to make the VM use a new set of malicious EPT table.
@@ -124,14 +129,17 @@ Even if the attacker cannot directly tamper the EPT, he can also subvert the gue
 % VMCS store EPTP that points to EPT
 % EPTP works like the CR3 in
 
-Secondly,  HyperPS hooks all VMCS operation and EPT operation functions in the hypervisor into the HyperPS space.
-Based on Intel manuals, VMCS can only be manipulated by privileged instructions: \verb|VMCLEAR| \verb|VMPTRLD|, \verb|VMREAD|, \verb|VMWRITE|, and so on.
-In the QEMU-KVM architecture, the KVM is responsible for executing these privileged instructions. The KVM provdes a wrapper around these privileged instructions. The QEMU does not need to deal architecture specific details, it just need to invoke KVM functions with proper parameters. 
-For example, \verb|vmcs_writel()| wraps the privileged instruction \verb|VMWRITE|, and \verb|vmcs_readl()| wraps the privileged instruction \verb|VMREAD|.
-HyperPS hooks these functions into the HyperPS space. In the HyperPS space, Context Management in the HyperPS Space Management component check the invoked parameters and verifies if the write to \verb|VM-Execution Control Fields.EPTP| is legal or not. 
-Since VMCS is hidden in the HyperPS space which is unaccessable by functions in the hypervisor space, all context management (accessing VMCS operations) must be trapped to HyperPS space. 
+Secondly,  HyperPS hooks all VMCS operation and EPT operation functions in the hypervisor into the HyperPS Space.
+In the QEMU-KVM architecture, The KVM provdes a wrapper around privileged instructions and is respinsible for executing privileged instructions.
+The QEMU does not need to deal architecture specific details, it just need to invoke KVM functions with proper parameters. 
+HyperPS hooks KVM's VMCS and EPT functions into the HyperPS Space. In the HyperPS Space, Context Management in the HyperPS Space Management component check the invoked parameters and verifies if the inputed parameters is legal or not.  
+% Based on Intel manuals, VMCS can only be manipulated by privileged instructions: \verb|VMCLEAR| \verb|VMPTRLD|, \verb|VMREAD|, \verb|VMWRITE|, and so on.
+% In the QEMU-KVM architecture, the KVM is responsible for executing these privileged instructions. The KVM provdes a wrapper around these privileged instructions. The QEMU does not need to deal architecture specific details, it just need to invoke KVM functions with proper parameters.
+% For example, \verb|vmcs_writel()| wraps the privileged instruction \verb|VMWRITE|, and \verb|vmcs_readl()| wraps the privileged instruction \verb|VMREAD|.
+% HyperPS hooks these functions into the HyperPS Space. In the HyperPS Space, Context Management in the HyperPS Space Management component check the invoked parameters and verifies if the write to \verb|VM-Execution Control Fields.EPTP| is legal or not.
+Since VMCS is hidden in the HyperPS Space which is unaccessable by functions in the hypervisor space, all context management (accessing VMCS operations) will be trapped to HyperPS Space inevitablely.
 %During VM-Exit (codes to access VMCS can only be executed in VM-Exit), the hypervisor 
-EPT operation functions are also hooked into the HyperPS Space too. EPT operation functions are different with VMCS operation functions, for the VMCS can only be accessed by just a few privileged instructions. Instead of hooking EPT accessing functions, HyperPS hooks all EPT operation functions. Functions about EPT creation, load, iteration, and destroy are re-place them into the HyperPS space. Functions invoke these EPT operation functions are hooked into the HyperPS Space.
+EPT operation functions are also hooked into the HyperPS Space too. EPT operation functions are different with VMCS operation functions, for the VMCS can only be accessed by just a few privileged instructions. Instead of hooking EPT accessing functions, HyperPS hooks all EPT operation functions. Functions about EPT creation, load, iteration, and destroy are re-place them into the HyperPS Space. Functions invoke these EPT operation functions are hooked into the HyperPS Space.
 
 % operation functions
 % HyperPS checks the
@@ -145,7 +153,7 @@ EPT operation functions are also hooked into the HyperPS Space too. EPT operatio
 
 Lastly, HyperPS also takes DMA attacks into consideration. An attacker with the ability of arbitrary memory access by exploiting DMA vulnerabilities can tamper VMCSes and EPTs. IOMMU carries out access control for DMA access. Thus, in this paper, HyperPS employs IOMMU mechanism to resist DMA attacks.
 In the hypervisor space, HyperPS found out all the critical data used by IOMMU, and removed the corresponding page table entries that map these data from the page tables. In this paper, HyperPS mainly defines the entrance address of HyperPS, the Page-Mark data, and the VM-Mark data (details about Page-Mark and VM-Mark data structure are illustrated in Section \ref{sub:vm_memory_protection}) as the critical data.
-In the HyperPS space, HyperPS intercepts the address mapping function about I/O. At runtime, HyperPS verifies whether the address belongs to the HyperPS space on receiving signals of executing these IO functions. 
+In the HyperPS Space, HyperPS intercepts the address mapping function about I/O. At runtime, HyperPS verifies whether the address belongs to the HyperPS Space on receiving signals of executing these IO functions. 
 
 
 % HyperPS removed all corresponding page table entries that map
@@ -168,7 +176,7 @@ In the HyperPS space, HyperPS intercepts the address mapping function about I/O.
 2. 第二要写怎么实现保护，在hook完成后，剥离了VMM对物理内存的管理，HyperPS是如何实现对内存的管理的。这里要假如关于缺页中断的相关内容，怎么处理EPT异常，也要处理新建EPT的内容，也要包括不同虚拟机的映射关系，也要绑定EPT与VM的关系，不允许VM和VMM更改EPTP内容。
 \fi
 
-HyperPS has removed EPTs and VMCSes from the original hypervisor space, and functions about accessing and updating them have also been hooked into the HyperPS space. 
+HyperPS has removed EPTs and VMCSes from the original hypervisor space, and functions about accessing and updating them have also been hooked into the HyperPS Space. 
 The HostOS/Hypervisor has already been deprived with privileges of managing the physical memory directly. Actually, the HostOS/Hypervisor can not access EPTs and VMCSes with regular memory access instructions or DMA instructions. 
 However, The HostOS/Hypervisor could still retrieve details about EPTs and VMCSes through legal functions. 
 The attacker can also tamper with EPT Paging Structures and VMCS fields with an malicious input to these hooked functions.
@@ -176,7 +184,7 @@ In this paper, HyperPS present two tables : Page-Mark table and VM-Mark table, t
 
 \subsubsection{EPTP Protection}%
 \label{ssub:eptp_protection}
-In this paper, we propose a table: VM-Mark table to restrict hypervisor from loading a new EPTP arbitrarily.
+In this paper, we propose a table: VM-Mark table to restrict hypervisor from loading a unverified EPTP value arbitrarily.
 The VM-Mark table consists of VM-Mark structures. 
 In the hypervisor, a new EPTP means a different EPT paging-structure hierarchy. An attacker can map VM virtual address to a total new physical page frame that hold malicious code. In this paper, HyperPS hooks all functions that can switch the value of EPTP, and verifies if the value is authorized by HyperPS before. HyperPS relies on the VM-Mark structure to identify whether the operation of changing EPTP is legal or not. 
 
@@ -189,7 +197,7 @@ HyperPS, thus, blinds the different EPT with a VM identifier instead of each VMC
 HyperPS also takes \verb|VMFUNC| into consideration too. EPTP switching is VM function 0. This VM function allows VM in VMX non-root operation to load a new value for the EPTP. The EPTP switching operation does not incur VM-Exit to VMX root operation.
 The \verb|VMFUNC| is limited to selecting from a list of potential EPTP values configured in advance by the hypervisor in VMX root operation. Thus, HyperPS also hooks all functions that manage the EPTP list in VMX root operation.
 
-When the hypevisor is going to load a new value for the EPTP or change EPTP list in VMX root operation, functions are hooked and control flow is redirected to HyperPS space. 
+When the hypevisor is going to load a new value for the EPTP or change EPTP list in VMX root operation, functions are hooked and control flow is redirected to HyperPS Space. 
 HyperPS iterates the VM-Mark table to check if the EPTP is authorized in advance.
 
 % checks if the input EPTP value matches a entry in
@@ -220,20 +228,24 @@ HyperPS iterates the VM-Mark table to check if the EPTP is authorized in advance
 
 \subsubsection{EPT Paging-structure Protection}%
 \label{ssub:ept_paging_structure_protection}
-Vaulues that update to EPT paging-structures need to be verified too. In this paper, we present Page-Mark structure to record the relationships between EPT paging-structures and the physical memory page frames. In HyperPS space, HyperPS composes all Page-Mark structures into one table, called Page-Mark table.
+Vaulues that update to EPT paging-structures need to be verified too. In this paper, we present Page-Mark structure to record the relationships between EPT paging-structures and the physical memory page frames. In HyperPS Space, HyperPS composes all Page-Mark structures into one table, called Page-Mark table.
 HyperPS guarantees effective isolation between different virtual machines based on this Page-Mark table. 
 
 Table \ref{tb:pagemark} presents the basic architecture of the Page-Mark structure.
-The field \verb|PFN| is the first address of the physical memory page frame. HyperPS fills in this field at the time when a physical memory page frame is assigned to a VM. Usualy, the hypervisor will creat a new EPT Paging-structure that maps this page frame and assigns the physical memory page frame to a guest physical memory page frame. The field \verb|OwnerID| is the same as the value of \verb|VMID| that identifies different VM/EPT. At the time when a physical memory page frame is assigned to a VM, HyperPS fills the field \verb|OwnerID| with value of the corresponding \verb|VMID|. However, In some virtualization environment, some particular physical memory page frames may be shared between differnt VMs. For example, different VMs with same kernel may share the same physical memory page frames that holds the kernel code. HyperPS takes this situation into consideration too. If one physical memory page frame is shared between VMs, HyperPS fills the field \verb|SharedID| with the one of the VM's \verb|OwnerID|.
+The field \verb|PFN| is the first address of the physical memory page frame. HyperPS fills in this field at the time when a physical memory page frame is assigned to a VM. Usualy, the hypervisor will creat a new EPT Paging-structure that maps this page frame and assigns the physical memory page frame to a guest physical memory page frame. The field \verb|OwnerID| is the same as the value of \verb|VMID| that identifies different VM/EPT. At the time when a physical memory page frame is assigned to a VM, HyperPS fills the field \verb|OwnerID| with value of the corresponding \verb|VMID|. 
+Kernel Same-page Merging (KSM), used by the KVM, allow for greater guest density of identical or similar guest operating system by avoiding memory duplication.
+% KVM guests to share identical memory pages
+% However, In some virtualization environment, some particular physical memory page frames may be shared between differnt VMs.
+For example, different VMs with same kernel may share the same physical memory page frames that holds the kernel code. HyperPS takes this situation into consideration too. If one physical memory page frame is shared between VMs, HyperPS fills the field \verb|SharedID| with the one of the VM's \verb|OwnerID|.
 
 HyperPS has hooked all functions about EPT operations.
-At runtime, control flow will be redirected to the HyperPS space when the hyperivisor invokes these functions. 
+At runtime, control flow will be redirected to the HyperPS Space when the hyperivisor invokes these functions. 
 In the HyperPS, HyperPS index the Page-Mark structure tables with the physical memory page frame address. 
 HyperPS ensures that any update to EPT Paging-structures must be in line with records in the Page-Mark table.
 With the help of the Page-Mark table, the attacker can no longer map a physical memory page frame which is original belong to a victim VM to the malicious VM. The compromised hypervisor can not map the guest VM into a dedicated physical memory page frame any more. 
 % If the update to EPT
 % HyperPS will verify the owner of pages when EPT update
-% HyperPS has hooked all functions about EPT operations. On executing thses functions, control flow is redirect into the HyperPS space.
+% HyperPS has hooked all functions about EPT operations. On executing thses functions, control flow is redirect into the HyperPS Space.
 
 \begin{table}[]
     \caption{Page-Mark Structure}
