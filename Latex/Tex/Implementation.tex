@@ -242,9 +242,17 @@ KSM是特别要处理的内容
 ###################
 \fi
 
+\subsection{Privilege Deprivation and Management}%
+\label{sub:privilege_deprivation_and_management}
+
+
 In HyperPS, the HostOS has been deprived of the privileges on managing EPTs. This give HyperPS full control over the guest VM's virtual-physical memory mapping and protection. In our prototype, we hook all KVM's VMX and EPT functions to redirect EPT management to our HyperPS Space.
 
 % TODO 上面说要保护管理EPT，但是这里为什么要从VMCS入手，这里要说明
+\subsubsection{VMCS Hook}%
+\label{ssub:vmcs_hook}
+
+
 Based on Intel manuals, VMCS can only be manipulated by several privileged instructions: \verb|VMPTRLD|, \verb|VMCLEAR| \verb|VMPTRLD|, \verb|VMREAD|, \verb|VMWRITE|, \verb|VMLAUNCH|, and so on.
 In the QEMU-KVM architecture, the KVM provdes a wrapper around these privileged instructions. The QEMU does not need to deal architecture specific details, it just need to invoke the wrapper functions in KVM with proper parameters.
 % the KVM is responsible for executing these privileged instructions. The KVM provdes a wrapper around these privileged instructions. The QEMU does not need to deal architecture specific details, it just need to invoke KVM functions with proper parameters.
@@ -259,6 +267,8 @@ HyperPS interposes the execution of \verb|vmcs_writel()|, and the Context Manage
 HyperPS also forbids arbitrary write to the \verb|VM-Function Controls| field in \verb|VM-Execution Control Fields|.
 The field \verb|VM-Function Controls| contains the physical address of the 4-KByte EPTP list. Invalid value in the EPTP list may lead to unverified EPTP value. 
 
+\subsubsection{EPT Hook}%
+\label{ssub:ept_hook}
 
 
 In this paper, because EPTs have been removed from the Normal Space, 
@@ -274,7 +284,7 @@ Thus, in our prototype, we dig into KVM to find out all functions that process E
 \end{figure}
 
 % MMU Initialization:
-EPT Creation: The KVM will create and initialize MMU along with the creation of vcpu. 
+\textbf{EPT Creation}: The KVM will create and initialize MMU along with the creation of vcpu. 
 If the EPT is supported and enabled by the hardware, The KVM module will invoke the function \verb|init_kvm_tdp_mmu| to initialize the MMU. 
 Actually, the function \verb|init_kvm_tdp_mmu()| is just responsible for registering all kinds of EPT management functions to the inputted vcpu management structure: \verb|vcpu->arch.mmu|. 
 For example, the EPT page fault function is initialized to \verb|kvm_tdp_page_fault()|, meanwhile inject page fault function is initialized to \verb|kvm_inject_page_fault()|. 
@@ -290,13 +300,14 @@ In our prototype, as shown in Figure \ref{fig:impept}, we hooked this function i
 % guarantee that only legitimate EPTP can be loaded
 % Actually, the \verb|init_kvm_tdp_mmu()| just registers lots of exception handling functions, such as \verb|kvm_tdp_page_fault()| to a stucture \verb|vcpu->arch.mmu|.
 % If the EPT is supported, the function \verb|init_kvm_tdp_mmu| is responsible for initializing the MMU.
+\iffalse
 Runtime EPT Management: 
 As shown in Figure \ref{fig:impept}, we classified all EPT management operations into five types: Page Fault, Update, Traverse, Load and Free. 
 In our prototype, because EPT and EPTP have been removed from the Normal Space, we have to hook all these functions into the HyperPS Space and implement  the respective EPT access services in the HyperPS Space. 
-
+\fi
 
 % EPT Construction Process:
-EPT Page fault:
+\textbf{EPT Page fault}:
 The KVM adopts the similar page table construction process to the kernel page table that fills EPT paging structures by handling EPT page fault. 
 As mentioned above, if the EPT page fault occurs, the KVM invokes the function \verb|kvm_tdp_page_fault()| to handle this exception. 
 % As mentioned above, the KVM invokes the function \verb|kvm_tdp_page_fault()| to handle EPT page fault.
@@ -310,20 +321,20 @@ HyperPS will format the allocated physical memory frame before mapping it in the
 % HyperPS will formate the
 % different virtual machines shared the same physical memory.
 
-EPT Traverse: 
+\textbf{EPT Traverse}: 
 % Though HyperPS does not interpose the traversal of EPT,
 Because all EPTs have been moved from the Normal Space to the HyperPS Space, though HyperPS does not interpose the traversal of EPT, HyperPS also need to instrument EPT traversal funtions, so that they can access EPTs. 
 However, we do not need to re-implement EPT traversal services in the HyperPS Space. In our prototype, we just implement a hook function that will invokes the Switch Gate to retrieve the corresponding EPTP value or EPT Paging Structure value. 
 For example, the function \verb|shadow_walk_init()| is responsible for initializing the struct \verb|kvm_shadow_walk_iterator| structure which will record the vaule of EPTP and be used in the traversal of EPTs. We added the hook funtion inside the function \verb|shadow_walk_init()| to access EPT in HyperPS Space. 
 
-EPT Load: 
+\textbf{EPT Load}: 
 In this paper, we propose a VM-Mark table to tag the mapping relations between the EPT and the corresponding virtual machine. 
 HyperPS will be engaged to check whether the loaded EPT corresponds to the virtual machine at every time the virtual is going to executing VM-Entry. 
 \verb|vcpu_enter_guest()| is an arch-specific function in KVM to start up a virtual machine. 
 As depected in Figure \ref{fig:impept}, we placed a hook before executing the funtion \verb|vmx_load_mmu_pgd()| inside this function. The function \verb|vmx_load_mmu_pgd()| is the final function that load the EPT. 
 If the EPTP (the base address of the EPT) matches an item in the VM-Mark Table, HyperPS will allow the subsequent operations, such as EPTP Switch and EPT Load, otherwise HyperPS will terminate the execution of the corresponding virtual machine. 
 
-EPT Update: 
+\textbf{EPT Update}: 
 In this paper, we propose a new structure: Page-Mark Table to record the relationships between EPT paging-structures and the physical memory page frames. 
 HyperPS guarantees that physical page frame with write permission can only be accessed with one determinate VM. 
 Physical page frames shared by different machines can only be read-only. 
@@ -430,6 +441,36 @@ when EPT is loaded, \verb|mmu_load_direct_root()| \verb|make_mmu_page_available|
 % HyperPS hooks these functions into the HyperPS Space. In the HyperPS Space, Context Management in the HyperPS Space Management component check the invoked parameters and verifies if the write to \verb|VM-Execution Control Fields.EPTP| is legal or not.
 
 
+\subsection{KSM Handle}%
+\label{sub:ksm_handle}
+Kernel Same-page Merging (KSM), used by the KVM Hypervisor, allows KVM guests to share identical memory pages. 
+KSM enables the KVM Hypervisor to examine two or more already running virtual machine and compare their memory. If any memory region or pages are identical, KSM reduces multiple identical memory pages to a single page. 
+% This merged page is marked Copy-On-Write (COW). If the contents of the page is modified by a guest virtual machine, a new page is created for that guest.
+The KSM adopts two red-black tree: the unstable tree and the stable treee, to implement its service.
+The unstable tree holds pointers to pages which have been found to be unchanged for a period of time. 
+The stable tree holds pointers to all the merged pages (KSM pages), sorted by their contents. All pages in the stable tree are write-protected. 
+If the contents of the page is modified by a guest virtual machine, a new page is created for that guest.
+Once a merged page has been recorded into the stable tree, the merged page pointer will never be removed from the stable tree until all users have either modified or unmapped it. 
+At runtime, for each page scanned, the KSM proceeds searching a match first in the stable tree that only contains already shared pages. If a match is found in the stable tree, KSM will merge this scanned page with the KSM page found in the stable. 
+If no match is found in the stable tree, KSM will then search the unstable tree, if a match is found in the unstable tree, the page is merged with the page in the unstable tree, and the resulting KSM merged page is added to the stable tree. 
+
+In this paper, as mentioned in Section \ref{ssub:ept_paging_structure_protection}, we also takes KSM into consideration. 
+\verb|stable_tree_insert()|, \verb|stable_tree_append()| is the funtions in KSM to add the merged page into stable tree. 
+Firstly, As mentioned above, we placed hooks in these stable tree operation functions to trap execution to HyperPS Space. 
+In our prototype, the Page-Mark Table is used to record all physical page frames used by the VM. If a page is merged by KSM, HyperPS fills the \verb|SharedID| with the corresponding VM identifier. 
+Secondly, Merging page results in EPT update too. HyperPS needs to get involved in the page merging process too. 
+\verb|try_to_merge_one_page()| and \verb|try_to_merge_two_page()| are the function in KSM to merge two pages into one. 
+For EPTs have been moved to HyperPS Space and EPT management functions are hooked to HyperPS Space too, we also hook these functions to HyprePS Space to synchronize the memory mapping changes to EPT.
+
+\iffalse
+Page-Mark Table is 
+HyperPS will record
+We present the field \verb|SharedID| in the Page-Mark Structure to acclimatize HyperPS to KSM. 
+for all merged page are recorded in the stable tree.
+As mentioned above, all merged page are recorded in the stable tree,
+In our prototype, HyperPS placed hooks into the
+HyperPS pays
+\fi
 
 \iffalse 
 
