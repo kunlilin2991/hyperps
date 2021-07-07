@@ -130,7 +130,7 @@ The attacker can also tamper with EPT Paging-structures directly (Attack Path 2)
 However, in some scenarios, the attacker does not have the ability to subvert the victim VM's VMCSes or EPT directly. 
 In some cases, the attacker can only tamper with page tables, which is Path 3 in Figure \ref{fig:threat}. However, the VM's memory in the QEMU-KVM environment is not only managed by the EPT, but also managed by the Hostos's page tables (QEMU process's page tables). An attacker could subvert the victim VM by tampering with the corresponding QEMU process's page table entries. The situation would be extremely severe when the VM (QEMU process) requests a new memory area or delivers a page fault interruption (in this situation, Hostos page tables are involved because of page fault, EPT is involved because of establishing new EPT Paging-structure. 
 In other cases,  
-an attacker may be only able to modify the EPT Paging-structures of a malicious VM (Attack Path 4 and Attack Path 5 in Figure \ref{fig:threat}). 
+an attacker may only be able to modify the EPT Paging-structures of a malicious VM (Attack Path 4 and Attack Path 5 in Figure \ref{fig:threat}). 
 The attacker could break the memory isolation between VM's by exploiting memory or page table vulnerabilities. For example, VMs with same guestos kernel may share the same kernel code memory frames. An attacker may subvert the victim VM by exploiting Copy-On-Write (COW) vulnerabilities in Hostos. 
 
 \iffalse
