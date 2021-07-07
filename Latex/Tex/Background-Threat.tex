@@ -2,7 +2,7 @@
 \label{sec:background_and_threat_model}
 
 % 这个章节也是由初稿中的Paranoma中分离出来，但是原来的全景图更换为威胁模型图，要重新写这部分内容
-This section presents some necessary background knowledge to facilitate readers to better understand HyperPS and threat model. 
+This section presents some necessary background knowledge to facilitate readers to understand HyperPS and threat model better. 
 
 % depicted in Figure \ref{pic:panorama}.
 
@@ -11,10 +11,10 @@ This section presents some necessary background knowledge to facilitate readers 
 
 \subsubsection{QEMU-KVM}%
 \label{ssub:qemu_kvm}
-QEMU is a generic and open source machine emulator and virtualizer. QEMU can use other hypervisor like \verb|Xen| or KVM to use CPU extensions for virtualization. When used as a virtualizer, QEMU achieves near native performances by executing the guest code directly on the host CPU.
-Kernel-based Virtual Machine (KVM) is an open source virtualization technology that converts Linux into a type-1 (bare-metal) hypervisor. KVM is a part of the Linux kernel that shares all the linux kernel's operating system-level components -such as the memory manager, process scheduler, security manager, and more to run VMs. Every VM is implemented as a regular Linux process, scheduled by the standard Linux scheduler, with dedicated virtual hardware like a network card, memory, and disks. KVM mainly consists of a loadable kernel module, kvm.ko, that provides the core virtualization infrastructure and a processor specific module, kvm-intel.ko or kvm-amd.ko.
-In virtualization environment, KVM does not work on its own. It is only an API provided by the kernel for userspace. End users typically use KVM through QEMU where it is present as an acceleration method.
-For the QEMU-KVM architecture, KVM interacts with QEMU (QEMU runs at the user space) in two ways: through device file \verb|/dev/kvm| and through memory mapped pages
+QEMU is a generic and open-source machine emulator and virtualizer. QEMU can use other hypervisors, like XEN or KVM, to use CPU extensions for virtualization. When used as a virtualizer, QEMU achieves near native performances by executing the guest code directly on the host CPU.
+Kernel-based Virtual Machine (KVM) is an open-source virtualization technology that converts Linux into a type-1 (bare-metal) hypervisor. KVM is a part of the Linux kernel that shares all the Linux kernel's operating system-level components -such as the memory manager, process scheduler, security manager, and more to run VMs. Every VM is implemented as a regular Linux process, scheduled by the standard Linux scheduler, with dedicated virtual hardware like a network card, memory, and disks. KVM mainly consists of a loadable kernel module, kvm.ko, that provides the core virtualization infrastructure and a processor specific module, kvm-intel.ko or kvm-amd.ko.
+In a virtualization environment, KVM does not work on its own. It is only an API provided by the kernel for userspace. End users typically use KVM through QEMU, where it is present as an acceleration method.
+For the QEMU-KVM architecture, KVM interacts with QEMU (QEMU runs at the user space) in two ways: through device file \verb|/dev/kvm| and through memory mapped pages.
 % KVM interacts with user space - in most case QEMU - in two ways: through device file \verb|/dev/kvm| and through memory mapped pages.
 Memory mapped pages are used for bulk transfer of data between QEMU and KVM. \verb|/dev/kvm| is the main API exposed by KVM. It supports a set of \verb|ioctl|s which allow QEMU to manage VMs and interact with them.
 % 怎么引出Hostos的问题
@@ -25,7 +25,7 @@ Memory mapped pages are used for bulk transfer of data between QEMU and KVM. \ve
 
 \subsubsection{VMCS}%
 \label{ssub:vmcs}
-Virtual-machine Control Structure is a data structure used in Virtual Machine eXtensions (VMX). It controls VMX non-root operations (guest virtual machine execution operations) and VMX transitions. Access to the VMCS is managed through the VMCS pointer (one per logical processor). The VMCS pointer is read and written suing the instructions \verb|VMPTRST| and \verb|VMPTRLD|. In general, the hypervisor configures a VMCS using \verb|VMREAD|, \verb|VMWRITE|, and \verb|VMCLEAR| instructions. A hypervisor could use a different VMCS for each virtual machine that it supports. For a virtual machine with multiple logical processor, the hypervisor could use a different for each logical processor. A logical processor may also maintain a number of VMCSs that are active, however, at any given time, at most one of the active VMCSs is the \textbf{current} VMCS. VMX instructions operate only on the \textbf{current} VMCS. 
+Virtual-machine Control Structure is a data structure used in Virtual Machine eXtensions (VMX). It controls VMX non-root operations (guest virtual machine execution operations) and VMX transitions. Access to the VMCS is managed through the VMCS pointer (one per logical processor). The VMCS pointer is read and written using the instructions \verb|VMPTRST| and \verb|VMPTRLD|. In general, the hypervisor configures a VMCS using \verb|VMREAD|, \verb|VMWRITE|, and \verb|VMCLEAR| instructions. A hypervisor could use a different VMCS for each virtual machine that it supports. For a virtual machine with multiple logical processors, the hypervisor could use a different for each logical processor. A logical processor may also maintain a number of VMCSs that are active, however, at any given time, at most one of the active VMCSs is the \textbf{current} VMCS. VMX instructions operate only on the \textbf{current} VMCS. 
 
 %这段写的不好，没有写出危害的具体内容，应该突出VMCS就是唯一的接口，VM的所有的行为都是在VMCS的instruct下的
 A compromised Hostos/hypervisor can force the guest virtual machine exit by tramper VM-Execution Control fields and VM-exit control fields in VMCS and tramper the guest virtual machine by writing Guest-State Area fields. 
@@ -39,12 +39,12 @@ A compromised Hostos/hypervisor can force the guest virtual machine exit by tram
 
 \subsubsection{EPT}%
 \label{ssub:ept}
-Intel implements it Second Level Address Translation (SLAT) as Extended Page Table (EPT). 
+Intel implements its Second Level Address Translation (SLAT) as Extended Page Table (EPT). 
 EPT allows each virtual machine to manage its page table (not the EPT), without giving access to the underlying host machine's MMU Hardware. Thus, EPT reduces the need for hypervisor to keep syncing the shadow pages eliminating the overhead.
-If EPT is enabled, guest-physical addresses are translated by traversing a set of EPT paging structures to produce physical addresses that are used to access memory.
+If EPT is enabled, guest-physical addresses are translated by traversing a set of EPT Paging-structures to produce physical addresses that are used to access memory.
 In addition to translating a guest-physical address to a physical address, EPT specifies the privileges that software is allowed when accessing the address. Attempts at disallowed accesses are called EPT violations and cause VM exits.
 
-A compromised Hostos/hypervisor could tramper EPT paging structures so that the virtual machine will execute arbitrary malicious code without knowing it. 
+A compromised Hostos/hypervisor could tramper EPT Paging-structures so that the virtual machine will execute arbitrary malicious code without knowing it. 
 Moreover, a compromised Hostos/Hypervisor could access any data in the guest virtual machine with the help of virtual machine introspection.
 
 \iffalse
@@ -101,7 +101,7 @@ In this section, we first present how attackers tamper virtual machines through 
 %##########################################
 % 老版本的内容，感觉更好，但是跟图不相符
 %##########################################
-As illustrated in Section \ref{sub:background}, Hypervisor manages VM's physical memory through EPT, and it configures and manages EPTs though the EPTP field in VMCS. Therefore, these two data structures: VMCS (especially the EPTP field) and EPT, become the key target for adversary to tamper VMs. 
+As illustrated in Section \ref{sub:background}, Hypervisor manages VM's physical memory through EPT, and it configures and manages EPTs through the EPTP field in VMCS. Therefore, these two data structures: VMCS (especially the EPTP field) and EPT, become the key target for adversary to tamper VMs. 
 % Hypervisor controls the execution of VMs through VMCSs, manages VMs' physical memory through EPT, and configures and manages EPTs through EPTP.
 % As such, these two data structures become the key target for adversary to tamper VMs.
 As depicted in Figure \ref{fig:threat}, 
@@ -112,7 +112,7 @@ In details, we assume that the attacker can tamper VMCSs and EPTs with one of th
 Second, the attacker can tamper these two data structures through direct memory write operations. The attacker can write these two data structures either through Direct Memory Access (DMA) or through regular memory access, if the attacker acquired these two data structures' memory locations before.  
 \fi
 
-As illustrated in Section \ref{sub:background}, Hypervisor manages VM's physical memory through EPT, and it configures and manages EPTs though the EPTP field in VMCS. Therefore, these two data structures: VMCS (especially the EPTP field) and EPT, become the key target for adversary to tamper VMs. 
+As illustrated in Section \ref{sub:background}, Hypervisor manages VM's physical memory through EPT, and it configures and manages EPTs through the EPTP field in VMCS. Therefore, these two data structures: VMCS (especially the EPTP field) and EPT, become the key target for an adversary to tamper VMs. 
 In this paper, we emphasize that the attacker does not settle for the denial of service attack, but attempts to inject malicious code into the victim VM. 
 Therefore, the momory, both it is access permissions and mapping relationships, is the most important target. 
 
@@ -125,12 +125,12 @@ For example, an attacker can tamper any fields in VMCSes or EPT with \verb|VMX| 
 
 % Figure \ref{pic:threat} shows how an attacker subverts a VM after the Hostos/Hypervisor has been exploited before.
 As mentioned above, we emphasize memory security, so that we have detailed the various attack paths of attackers against EPT in Figure \ref{fig:threat}.
-An attacker can tamper with the EPTP field in VMCS directly, thereby establishing a dedicated and malicous EPT Paging-structure hierarchy, which is the Attack Path 1 in Figure \ref{fig:threat}. 
+An attacker can tamper with the EPTP field in VMCS directly, thereby establishing a dedicated and malicious EPT Paging-structure hierarchy, which is the Attack Path 1 in Figure \ref{fig:threat}. 
 The attacker can also tamper with EPT Paging-structures directly (Attack Path 2).
 However, in some scenarios, the attacker does not have the ability to subvert the victim VM's VMCSes or EPT directly. 
-In some cases, the attacker can only tamper with page tables, which is Path 3 in Figure \ref{fig:threat}. However, the VM's memory in the QEMU-KVM environment is not only managed by the EPT, but also managed by the Hostos's page tables (QEMU process's page tables). An attacker could subvert the victim VM by tampering the corresponding QEMU process's page table entries. Situation would be extremely severe when the VM (QEMU process) requests a new memory area or delivers a page fault interruption (in this situation, Hostos page tables are involved because of page fault, EPT is involved because of establishing new EPT Paging-structure. 
+In some cases, the attacker can only tamper with page tables, which is Path 3 in Figure \ref{fig:threat}. However, the VM's memory in the QEMU-KVM environment is not only managed by the EPT, but also managed by the Hostos's page tables (QEMU process's page tables). An attacker could subvert the victim VM by tampering with the corresponding QEMU process's page table entries. The situation would be extremely severe when the VM (QEMU process) requests a new memory area or delivers a page fault interruption (in this situation, Hostos page tables are involved because of page fault, EPT is involved because of establishing new EPT Paging-structure. 
 In other cases,  
-an attacker may only able to modify the EPT Paging-structures of a malicious VM (Attack Path 4 and Attack Path 5 in Figure \ref{fig:threat}). 
+an attacker may be only able to modify the EPT Paging-structures of a malicious VM (Attack Path 4 and Attack Path 5 in Figure \ref{fig:threat}). 
 The attacker could break the memory isolation between VM's by exploiting memory or page table vulnerabilities. For example, VMs with same guestos kernel may share the same kernel code memory frames. An attacker may subvert the victim VM by exploiting Copy-On-Write (COW) vulnerabilities in Hostos. 
 
 \iffalse
@@ -165,11 +165,11 @@ Second, the attacker can tamper these two data structures through direct memory 
 \subsubsection{Attack Examples}
 We present several attacks to illustrate how an attack subvert VMs by through tampering VMCS and EPT.
 
-\paragraph{VMCS Subversion}
+\textbf{VMCS Subversion}:
 Attackers can tamper fields of VMCS in VM Exit stage. For example, modifying the value of \verb|HOST_RIP| register and writing a malicious program address to this register will cause a control flow hijacking attack. Modifying the value of privilege register, CR0, will close the DEP mechanism, and modifying the value of CR4 register will close the SMEP mechanism.
 
 
-\paragraph{EPT Subversion}
+\textbf{EPT Subversion}: 
 Malicious modification of EPT will break the isolation between virtual machines. A vicious VM can break the isolation between VMs by tampering with EPT entries, and access the memory of the victim VM at his vicious will. For example, the attacker can conduct remapping attack and double mapping attack to inspect a victim VM. 
 
 For the double mapping attack, the attacker first controls and compromises a VM, then obtains the privilege of the hypervisor through the virtual machine escape attack, and maliciously accesses the VMCS structure to obtain the value of EPTP. The attack process is as shown in Figure \ref{pic:remap}. 
@@ -186,7 +186,7 @@ For the remapping attack, there are VM1 (attacker) and VM2 (victim). A physical 
     \label{pic:remap}
 \end{figure}
 
-\subsubsection{Attacks to Kernel Page Tables}
+\textbf{Attacks to Kernel Page Tables}: 
 We also take into account the fact that attacker already knows the deployment of HyperPS. As depicted in Figure \ref{fig:threat}, key components, such as Kernel Page Tables, Control Registers, to create the secure and isolated execution environment are also protected by us. More details about the creation of the secure and isolated execution environment are illustrated in Section \ref{sub:hyperps_space}. 
 %添加关于章节的引用
  
