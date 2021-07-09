@@ -1,6 +1,6 @@
 \section{Implementation}%
 \label{sec:implementation}
-We have implemented a full-featured prototype of HyperPS.
+% We have implemented a full-featured prototype of HyperPS.
 
 
 \subsection{HyperPS Space}%
@@ -21,7 +21,7 @@ Stripping EPT's access capability can prevent attackers from tampering with EPT.
 
 
 In this paper, we create a delicate kernel-level trusted execution environment, called HyperPS Space, to inherit privileges of managing physical memory that originally belonged to the compromised hypervisor. 
-The HyperPS Space achieves isolation and secure context switching without relying on a higher privileged layer or any special hardwares. 
+The HyperPS Space achieves isolation and secure context switching without relying on a higher privileged layer or any special hardware. 
 % As shown in Figure \ref{fig:address}, we create the HyperPS Space by using two set of page tables.
 % describes the address layout of HyperPS.
 
@@ -43,7 +43,7 @@ The HyperPS Space achieves isolation and secure context switching without relyin
 % 一个合格的TEE应该
 \fi
 
-In our prototype, we create the HyperPS Space by using two set of page tables.  
+In our prototype, we create the HyperPS Space by using two sets of page tables.  
 Figure \ref{fig:address} describes the address layout of HyperPS. 
 \begin{figure}[htpb]
     \centering
@@ -58,14 +58,14 @@ Figure \ref{fig:address} describes the address layout of HyperPS.
 % hostos的kernel并不能在boot的时候就直接完成两套页表的建立。
 % As shown in this figure, HyperPS has to load itself into memory at first.
 As shown in this figure, at the initialization stage, HyperPS has to load itself into memory firstly before it got executed. 
-At this stage, all resources are managed by the Hostos kernel, HyperPS needs to request enormous number of memory allocation from the Hostos. These memory are used to hold HyperPS data and security tools that inherit compromised hypervisor's privileges of managing physical memory. 
+At this stage, all resources are managed by the Hostos kernel, HyperPS needs to request enormous numbers of memory allocation from the Hostos. These memories are used to hold HyperPS data and security tools that inherit compromised hypervisor's privileges of managing physical memory. 
 In our prototype, we do not guarantee that all allocated memories are continuous in physical memory. 
-Secondly, HyperPS creates a new page table that has already excluded the HyperPS Space. As shown in Figure \ref{fig:address}, this dedicated page table is placed in the normal space and accessed by the compromised HostOS kernel. 
+Secondly, HyperPS creates a new page table that has already excluded the HyperPS Space. As shown in Figure \ref{fig:address}, this dedicated page table is placed in the Normal Space and accessed by the compromised HostOS kernel. 
 Because all page table entries that are relative to HyperPS Space have been removed from that dedicated page table, 
 % normal memory access beyond the HyperPS Space can not visit memory regions of HyperPS Space.
-memory regions used by HyperPS are carved out of the memory reanges accessible to the HostOS kernel. 
+memory regions used by HyperPS are carved out of the memory ranges accessible to the HostOS kernel. 
 % Thirdly, HyperPS will set a new GDT, IDT and stack for itself.
-At last, HyperPS returns execution back to the normal space by loading the address of the dedicated page table into the control register CR3. 
+At last, HyperPS returns execution back to the Normal Space by loading the address of the dedicated page table into the control register CR3. 
 
 On the execution of the three steps mentioned above, HyperPS has established an execution environment. 
 However, at this time, this execution environment does not have the conditions for isolation and security, since the kernel can still modify this memory layout or access permission. 
@@ -74,37 +74,37 @@ However, at this time, this execution environment does not have the conditions f
 \subsubsection{The Isolation of HyperPS Space}%
 \label{ssub:the_isolation_of_hyperps_space}
 % HyperPS has created a protected virtual address space.
-HyperPS has to guarantee that memory regions used by HyperPS are carved out of the memory ranges accessible to the kernel.
-In oder to achieve the isolation of the HyperPS Space, HyperPS restricts the compromised HostOS kernel access to this space. 
+HyperPS has to guarantee that the memory regions used by HyperPS are carved out of the memory ranges accessible to the kernel.
+In order to achieve the isolation of the HyperPS Space, HyperPS restricts the compromised HostOS kernel access to this space. 
 % To protect HyperPS Space, firstly, we deprive the write permission to whole kernel page tables,
-Firstly, we remove write permissions to whole kernel page tables, so that the HostOS kernel can not modify the dedicated kernel page table in the Normal Space. In out prototype, the HostOS kernel can still navigate and examine page table entries, while write operations through legitimate page table management functions and macros are hooked and redirected into HyperPS Space. 
-Meanwhile, direct write operations to the dedicated kernel page table will trigger error. 
+Firstly, we removed write permissions to whole kernel page tables, so that the HostOS kernel can not modify the dedicated kernel page table in the Normal Space. In our prototype, the HostOS kernel can still navigate and examine page table entries, while write operations through legitimate page table management functions and macros are hooked and redirected into HyperPS Space. 
+Meanwhile, direct write operations to the dedicated kernel page table will trigger an error (segment fault). 
 % In our prototype, all page table write operations are completed inside the HyperPS Space.
 % any modification operation will
 % to
 % navigation and examination of page table entries
 % so that they are exclusively writable to HyperPS in the HyperPS Space.
 % To protect HyperPS Space, write permission to HostOS kernel page tables
-Secondly, as mentioned above, HyperPS removed all page table management functions and macros and replaces them with hooks that jump to HyperPS Space, so that any modification to the dedicated kernel page table in the normal space will be redirected to HyperPS Space. 
-For example, \verb|native_set_pte()| is the function that acutally implements PTE operations. Other PTE operation functions such as \verb|set_pte()| and \verb|native_set_pte_atomic()| all invoke the \verb|native_set_pte()| function to accomplish their implementation. 
+Secondly, as mentioned above, HyperPS removed all page table management functions and macros and replaced them with hooks that jump to HyperPS Space, so that any modification to the dedicated kernel page table in the Normal Space will be redirected to HyperPS Space. 
+For example, \verb|native_set_pte()| is the function that actually implements PTE operations. Other PTE operation functions such as \verb|set_pte()| and \verb|native_set_pte_atomic()| all invoke the \verb|native_set_pte()| function to accomplish their implementation. 
 % implement their
 % will implement their operation by invoking this function.
 In our prototype, HyperPS hooks all these final and elemental page table management functions and macros.
 % For example, we hooked \verb|native_set_pte|, \verb|native_set_pmd| and \verb|do_page_fault|
-HyperPS makes sure that the HostOS kernel can neither tamper the virtual memory permissions of the HyperPS Space, nor can it establish new mapping relationship to the physical memory frames related to the HyperPS Space. 
+HyperPS makes sure that the HostOS kernel can neither tamper the virtual memory permissions of the HyperPS Space, nor can it establish new mapping relationships to the physical memory frames related to the HyperPS Space. 
 % For example,
-In another word, the HostOS kernel page table are exclusively writable to HyperPS only. 
-Lastly, HyperPS deprives the HostOS kernel from executing certain Control-Register-Relative functions so that it cannot direct the CPU to use alternative page tables other than the dedicated one we put in the normal space. 
+In other word, the HostOS kernel page table is exclusively writable to HyperPS only. 
+Lastly, HyperPS deprives the HostOS kernel of executing certain Control-Register-Relative functions so that it cannot direct the CPU to use alternative page tables other than the dedicated one we put in the Normal Space. 
 % In this paper, HyperPS instrumented the kernel code to remove certain Control-Register-Relative functions.
-For example, \verb|native_write_cr3()| is written with inline assembly language to load page table's physical address into the register CR3. 
-HyperPS instrumented this function to prevnet the adversary from using a unverified page table. 
+For example, \verb|native_write_cr3()| is written with inline assembly language to load the page table's physical address into the register CR3. 
+HyperPS instrumented this function to prevent the adversary from using an unverified page table. 
 % HyperPS instrumented the function \verb|native_write_cr3| to prevent the adversary from using a unverified page table.
-HyperPS also intercept the accessing operation to Control Register: CR0 to prevent the adversary from disabling WP protection mechanism.
+HyperPS also intercept the accessing operation to Control Register: CR0 to prevent the adversary from disabling the WP protection mechanism.
 Actually, HyperPS hooked \verb|native_write_cr0()|, \verb|native_write_cr2()|, \verb|native_write_cr3()|, and \verb|native_write_cr4()| to HyperPS Space.
 % redirect the execution to HyperPS Space.
 % , such as the ones that change the vulue of CR0, CR3, and CR4.
-By enforcing these three steps, the HostOS kernel running in the normal space is neither allowed to modify the dedicated host kernel page table nor change the control register configurations to use unverified page tables. 
-As a result, the HostOS kernel cannot violate the isolation provided to HyperPS, since HyperPS deprives the HostOS kernel privileges of access to control registers and page tables and retains these privileges in the HyperPS Space.
+By enforcing these three steps, the HostOS kernel running in the Normal Space can neither modify the dedicated host kernel page table nor change the control register configurations to use unverified page tables. 
+As a result, the HostOS kernel cannot violate the isolation provided to HyperPS, since HyperPS deprives the HostOS kernel of privileges of accessing control registers and page tables and retains these privileges in the HyperPS Space.
 
 % As a result, the HostOS kernel cannot violate the isolation provided to HyperPS, while HyperPS retains the exclusive access to control the control registers and page tables in the HyperPS Space.
 % which
@@ -167,15 +167,15 @@ On the other side of Figure \ref{fig:address}, HyperPS safeguard the integral pa
 Switch Gate is designed to allow secure switching between HyperPS Space and the Normal Space, and it is the only interface between the Normal Space and the HyperPS Space. In this paper, HyperPS adopts a technique similar to the one presented in SKEE \ref{Azab2016SKEE}. Our Switch Gate can achieve atomic, deterministic and exclusive too.
 % Switch Gate is the only interface between the Normal Space and the HyperPS Space. HyperPS adopts a technique similar to the one presented in SKEE \ref{Azab2016SKEE}. In this paper, our Switch Gate is designed to allow secure switching between HyperPS Space and the Normal Space. Our Switch Gate is designed to be atomic, deterministic and exclusive too.
 As shown in the middle block of Figure \ref{fig:address}, the Switch Gate mainly consists of three parts: the Entry Gate, the Exit Gate and the Shared Buffer. 
-The Entry Gate provides the only entrance for HyperPS Space. The Entry Gate will save the HostOS kernel state into the Shared Buffer first. Secondly, it will clear and disable interrupts. Interrupts could enable the compromised HostOS kernel crash the atomic execution of Switch Gate. 
+The Entry Gate provides the only entrance for HyperPS Space. The Entry Gate will save the HostOS kernel state into the Shared Buffer first. Secondly, it will clear and disable interrupts. Interrupts could enable the compromised HostOS kernel to crash the atomic execution of Switch Gate. 
 Then HyperPS will enter the HyperPS Space by loading the page table used by HyperPS Space into register Cr3. 
 % load the page table used by HyperPS Space into register CR3.
-The address of this page table is visible to HostOS kernel, however, as mentioned above, because all page table management functions and control register management function have been hooked by HyperPS, the compromised HostOS kernel cannot subvert the HyperPS Space by using unverified page tables. 
-Lastly, we clear interrupts with \verb|CLI| instruction again before we execute any instruction in the HyperPS Space. 
+The address of this page table is visible to HostOS kernel, however, as mentioned above, because all page table management functions and control register management functions have been hooked by HyperPS, the compromised HostOS kernel cannot subvert the HyperPS Space by using unverified page tables. 
+Lastly, we clear interrupt with \verb|CLI| instruction again before we execute any instruction in the HyperPS Space. 
 % divert execution into HyperPS Space.
 The Exit Gate is the only interface that can divert execution back to Normal Space. It can only be invoked by HyperPS from the HyperPS Space. 
-On recieving the invocation to Exit Gate, 
-HyperPS will load the dedicated HostOS kernel page table into register CR3, recovere interrupts, and recover saved kernel state. 
+On receiving the invocation to Exit Gate, 
+HyperPS will load the dedicated HostOS kernel page table into register CR3, recover interrupts and the saved kernel state. 
 The Shared Buffer contains data and code shared by the Normal Space and the HyperPS Space. For example, as mentioned above, the entrance address of HyperPS Space and the return address to the Normal Space are stored in this buffer. HyperPS also stores the saved kernel state in this buffer. 
 % In our prototype, we mapped the Switch Gate at the same place in both Normal Space and the HyperPS Space.
 
@@ -246,7 +246,7 @@ KSM是特别要处理的内容
 \label{sub:privilege_deprivation_and_management}
 
 
-In HyperPS, the HostOS has been deprived of the privileges on managing EPTs. This give HyperPS full control over the guest VM's virtual-physical memory mapping and protection. In our prototype, we hook all KVM's VMX and EPT functions to redirect EPT management to our HyperPS Space.
+In HyperPS, the HostOS has been deprived of the privileges of managing EPTs. This gives HyperPS complete control over the guest VM's virtual-physical memory mapping and protection. In our prototype, we hook all KVM's VMX and EPT functions to redirect EPT management to our HyperPS Space.
 
 % TODO 上面说要保护管理EPT，但是这里为什么要从VMCS入手，这里要说明
 \subsubsection{VMCS Hook}%
@@ -254,26 +254,26 @@ In HyperPS, the HostOS has been deprived of the privileges on managing EPTs. Thi
 
 
 Based on Intel manuals, VMCS can only be manipulated by several privileged instructions: \verb|VMPTRLD|, \verb|VMCLEAR| \verb|VMPTRLD|, \verb|VMREAD|, \verb|VMWRITE|, \verb|VMLAUNCH|, and so on.
-In the QEMU-KVM architecture, the KVM provdes a wrapper around these privileged instructions. The QEMU does not need to deal architecture specific details, it just need to invoke the wrapper functions in KVM with proper parameters.
-% the KVM is responsible for executing these privileged instructions. The KVM provdes a wrapper around these privileged instructions. The QEMU does not need to deal architecture specific details, it just need to invoke KVM functions with proper parameters.
+In the QEMU-KVM architecture, the KVM provides a wrapper around these privileged instructions. The QEMU does not need to deal architecture specific details, it just needs to invoke the wrapper functions in KVM with proper parameters.
+% the KVM is responsible for executing these privileged instructions. The KVM provides a wrapper around these privileged instructions. The QEMU does not need to deal architecture specific details, it just need to invoke KVM functions with proper parameters.
 In Linux, all VMX operation functions are defined in the file \verb|vmx_ops.h|. 
 For example, \verb|vmcs_writel()| wraps the privileged instruction \verb|VMWRITE|, it will update the specified field of a VMCS with a given value. 
 % the value to a VMCS filed
 \verb|__vmcs_readl()| is one of wrapper functions to the privileged instruction \verb|VMREAD|, this function reads a field from a VMCS and returns field value. 
 % it into
 In our prototype, we implement all VMX functions in Normal Space with hooks to HyperPS Space to provide all VMX services. 
-In particular, we prevent the HostOS/Hypervisor from loading a unverified EPTP. 
-HyperPS interposes the execution of \verb|vmcs_writel()|, and the Context Management in the HyperPS Space Management component check the invoked parameters and verifies if the write to \verb|VM-Execution Control Fields.EPTP| is legal or not. 
+In particular, we prevent the HostOS/Hypervisor from loading an unverified EPTP. 
+HyperPS interposes the execution of \verb|vmcs_writel()|, and the Context Management in the HyperPS Space Management component checks the invoked parameters and verifies if the write to \verb|VM-Execution Control Fields.EPTP| is legal or not. 
 HyperPS also forbids arbitrary write to the \verb|VM-Function Controls| field in \verb|VM-Execution Control Fields|.
-The field \verb|VM-Function Controls| contains the physical address of the 4-KByte EPTP list. Invalid value in the EPTP list may lead to unverified EPTP value. 
+The field \verb|VM-Function Controls| contains the physical address of the 4-KByte EPTP list. Invalid value in the EPTP list may lead to an unverified EPTP value. 
 
 \subsubsection{EPT Hook}%
 \label{ssub:ept_hook}
 
 
 In this paper, because EPTs have been removed from the Normal Space, 
-HyperPS needs to hooks EPT functions that access to EPTP and EPT Paging Structures to HyperPS Space, and implement these services in the HyperPS Space.
-In QEMU-KVM architecture, the KVM is the componet that maintainS EPTs while QEMU is responsible for requesting for memory allocation.
+HyperPS needs to hooks EPT functions that access EPTP and EPT Paging Structures to HyperPS Space, and implement these services in the HyperPS Space.
+In QEMU-KVM architecture, the KVM is the component that maintains EPTs, while QEMU is responsible for requesting memory allocation.
 Thus, in our prototype, we dig into KVM to find out all functions that process EPTPs and EPTs directly. Figure \ref{fig:impept} depicts how HyperPS handles all EPT management functions. 
 
 \begin{figure}[htpb]
@@ -308,14 +308,16 @@ In our prototype, because EPT and EPTP have been removed from the Normal Space, 
 
 % EPT Construction Process:
 \textbf{EPT Page fault}:
-The KVM adopts the similar page table construction process to the kernel page table that fills EPT paging structures by handling EPT page fault. 
+The KVM adopts a similar page table construction process to the kernel page table that fills EPT paging structures by handling EPT page fault. 
 As mentioned above, if the EPT page fault occurs, the KVM invokes the function \verb|kvm_tdp_page_fault()| to handle this exception. 
 % As mentioned above, the KVM invokes the function \verb|kvm_tdp_page_fault()| to handle EPT page fault.
-Normally, the KVM is not responsible for the allocation of physical pages, what KVM does is to synchronize the allocated physical page frame number (PFN) to the corresponding EPT paging-structure. We classify EPT operations in EPT Page Fault into Update. 
-In virtualization environment, there is a memory reclamation technique, called Ballooning, that is used by the hypervisor to allow the physical host system to retrieve memories from certain guest virtual machine and share them with others. 
+Typically, the KVM is not responsible for the allocation of physical pages. 
+It is responsible for synchronizing the allocated physical page frame number (PFN) to the corresponding EPT Paging-structure. We classify EPT operations in EPT Page Fault into Update. 
+% What KVM does is to synchronize the allocated physical page frame number (PFN) to the corresponding EPT paging-structure. We classify EPT operations in EPT Page Fault into Update.
+In a virtualization environment, there is a memory reclamation technique, called Ballooning, that is used by the hypervisor to allow the physical host system to retrieve memories from certain guest virtual machine and share them with others. 
 However, Ballooning may be abused to facilitate side channel attacks. 
-In this paper, we take such situation into consideration. As depicted in Figure ref{fig:impept}, 
-HyperPS will format the allocated physical memory frame before mapping it in the EPT during executing the function \verb|kvm_tdp_page_fault()|. More details are illustrated in Section . 
+In this paper, we take such kind of situation into consideration. As depicted in Figure ref{fig:impept}, 
+HyperPS will format the allocated physical memory frame before mapping it in the EPT while executing the function \verb|kvm_tdp_page_fault()|. More details are illustrated in Section \ref{sub:ksm_handle}. 
 % TODO 添加章节的引用
 % we hook the function \verb|kvm_tdp_page_fault()| into HyperPS Space, and format the allocated physical memory frame before mapping it in the EPT in this function.
 % HyperPS will formate the
@@ -323,27 +325,27 @@ HyperPS will format the allocated physical memory frame before mapping it in the
 
 \textbf{EPT Traverse}: 
 % Though HyperPS does not interpose the traversal of EPT,
-Because all EPTs have been moved from the Normal Space to the HyperPS Space, though HyperPS does not interpose the traversal of EPT, HyperPS also need to instrument EPT traversal funtions, so that they can access EPTs. 
-However, we do not need to re-implement EPT traversal services in the HyperPS Space. In our prototype, we just implement a hook function that will invokes the Switch Gate to retrieve the corresponding EPTP value or EPT Paging Structure value. 
-For example, the function \verb|shadow_walk_init()| is responsible for initializing the struct \verb|kvm_shadow_walk_iterator| structure which will record the vaule of EPTP and be used in the traversal of EPTs. We added the hook funtion inside the function \verb|shadow_walk_init()| to access EPT in HyperPS Space. 
+Because all EPTs have been moved from the Normal Space to the HyperPS Space, though HyperPS does not interpose the traversal of EPT, HyperPS also needs to instrument EPT traversal functions, so that they can access EPTs. 
+However, we do not need to re-implement EPT traversal services in the HyperPS Space. In our prototype, we just implement a hook function that will invoke the Switch Gate to retrieve the corresponding EPTP value or EPT Paging Structure value. 
+For example, the function \verb|shadow_walk_init()| is responsible for initializing the struct \verb|kvm_shadow_walk_iterator| structure which will record the value of EPTP and be used in the traversal of EPTs. We added the hook function inside the function \verb|shadow_walk_init()| to access EPT in HyperPS Space. 
 
 \textbf{EPT Load}: 
 In this paper, we propose a VM-Mark table to tag the mapping relations between the EPT and the corresponding virtual machine. 
-HyperPS will be engaged to check whether the loaded EPT corresponds to the virtual machine at every time the virtual is going to executing VM-Entry. 
+HyperPS will be engaged to check whether the loaded EPT corresponds to the virtual machine every time the virtual is going to executing VM-Entry. 
 \verb|vcpu_enter_guest()| is an arch-specific function in KVM to start up a virtual machine. 
-As depected in Figure \ref{fig:impept}, we placed a hook before executing the funtion \verb|vmx_load_mmu_pgd()| inside this function. The function \verb|vmx_load_mmu_pgd()| is the final function that load the EPT. 
-If the EPTP (the base address of the EPT) matches an item in the VM-Mark Table, HyperPS will allow the subsequent operations, such as EPTP Switch and EPT Load, otherwise HyperPS will terminate the execution of the corresponding virtual machine. 
+As depicted in Figure \ref{fig:impept}, we placed a hook before executing the function \verb|vmx_load_mmu_pgd()| inside this function. The function \verb|vmx_load_mmu_pgd()| is the final function that load the EPT. 
+If the EPTP (the base address of the EPT) matches an item in the VM-Mark Table, HyperPS will allow the subsequent operations, such as EPTP Switch and EPT Load. Otherwise, HyperPS will terminate the execution of the corresponding virtual machine. 
 
 \textbf{EPT Update}: 
-In this paper, we propose a new structure: Page-Mark Table to record the relationships between EPT paging-structures and the physical memory page frames. 
-HyperPS guarantees that physical page frame with write permission can only be accessed with one determinate VM. 
+In this paper, we propose a new structure: Page-Mark Table to record the relationships between EPT Paging-structures and the physical memory page frames. 
+HyperPS guarantees that physical page frames with write permission can only be accessed with one determinate VM. 
 Physical page frames shared by different machines can only be read-only. 
 Besides, HyperPS guarantees that virtual machines participating the memory sharing are authenticated and recorded by us. 
 Figure \ref{fig:impept} depicts the rough process of how HyperPS handles EPT Update. 
-As mentioned above, in this paper, in addition to changing the permissions of EPT entries, HyperPS also regards the allocation of a new EPT paging-structure as EPT Update. 
-In our prototype, we do not get involved in new physical memory page frame allocation, we focus on operations to EPTs only. 
+As mentioned above, in this paper, in addition to changing the permissions of EPT entries, HyperPS also regards the allocation of a new EPT Paging-structure as EPT Update. 
+In our prototype, we do not get involved in new physical memory page frame allocation. We focus on operations to EPTs only. 
 The function \verb|__direct_map()| in KVM is the core function to build new EPT entries. HyperPS places hooks inside this function to perfrom security checks. If the allocated physical frame number is untracked in the Page-Mark Table, HyperPS will first invokes the function mentioned above to format this allocated physical page. Then, HyperPS hooks the function \verb|kvm_mmu_get_page()|, the function \verb|link_shadow_page()|, and the function \verb|mmu_set_spte()| into the HyperPS Space.
-In the HyperPS Space, HyperPS will initialize a new EPT paging-structure, and link it the EPT.
+In the HyperPS Space, HyperPS will initialize a new EPT Paging-structure, and link it to the EPT.
 % and link it to the corresponding
 
 \iffalse
@@ -361,7 +363,7 @@ In this paper, we define EPT Update as assigning a new EPT paging-structure or u
 if the the EPT and the 
 every time a virtual machine is going to be loaded into Non-Root model. 
 \verb|vcpu_enter_guest()| is an arch-specific function in KVM to start up a virtual machine. 
-In this function, we placed a hook before executing the funtion \verb|vmx_load_mmu_pgd()| inside this function. 
+In this function, we placed a hook before executing the function \verb|vmx_load_mmu_pgd()| inside this function. 
 This function will will invoke the function \verb|vmx_load_mmu_pgd()| to load the EPT. 
 The KVM will invoke the function \verb|vcpu_enter_guest()| to 
 to load the corresponding EPT 
@@ -383,7 +385,7 @@ In this paper, HyperPS does not hook EPT traversal functions, such as data struc
 \verb|kvm_walk_init_using_root()| takes \verb|kvm_shadow_walk_iterator| as input. 
 \verb|shadow_walk_okay()| \verb|shadow_walk_next()|
 
-\verb|kvm_shadow_walk_iterator| records the vaule of EPTP
+\verb|kvm_shadow_walk_iterator| records the value of EPTP
 \fi
 % It just maintains EPTs. Thus,
 % what the KVM does in Page Fault Handling is similar to
@@ -415,7 +417,133 @@ In this paper, HyperPS does not hook EPT traversal functions, such as data struc
 \verb|kvm_walk_init_using_root()| takes \verb|kvm_shadow_walk_iterator| as input. 
 \verb|shadow_walk_okay()| \verb|shadow_walk_next()|
 
-\verb|kvm_shadow_walk_iterator| records the vaule of EPTP
+\verb|kvm_shadow_walk_iterator| records the value of EPTP
+
+every time the virtual machine runs, execute \verb|vcpu_enter_guest()|, this function load EPT.
+
+transfer \verb|kvm_mmu_load()| set customer CR3
+
+KVM is not responsible for the allocation of physical pages, but maintains EPT. 
+
+\verb|hva_to_pfn()|: get the host physical page frame number from the host vurtual address.
+
+\verb|__direct_map()| is the core function to build the page table.
+\verb|kvm_mmu_get_page()| 分配一个EPT 页表项 
+\verb|link_shadow_page()| 将新分配到下一级页表页的基地址填充到当前页表项SPTE中
+
+\verb|mmu_set_spte| is the final calling function to set the page table structure. 
+
+when the page is invalid, it will eventually call \verb|kvm_mmu_free_page()| recycling, here is mainly to see when it will be recycled
+when EPT is loaded, \verb|mmu_load_direct_root()| \verb|make_mmu_page_available|.
+\fi
+
+% which will crash
+% HyperPS instrumented this function to prevnet the adversary from using a unverified page table.
+% the respective hooked functions
+% HyperPS hooks these functions into the HyperPS Space. In the HyperPS Space, Context Management in the HyperPS Space Management component check the invoked parameters and verifies if the write to \verb|VM-Execution Control Fields.EPTP| is legal or not.
+
+
+\subsection{KSM Handle}%{}. 
+% TODO 添加章节的引用
+% we hook the function \verb|kvm_tdp_page_fault()| into HyperPS Space, and format the allocated physical memory frame before mapping it in the EPT in this function.
+% HyperPS will formate the
+% different virtual machines shared the same physical memory.
+
+\textbf{EPT Traverse}: 
+% Though HyperPS does not interpose the traversal of EPT,
+Because all EPTs have been moved from the Normal Space to the HyperPS Space, though HyperPS does not interpose the traversal of EPT, HyperPS also need to instrument EPT traversal functions, so that they can access EPTs. 
+However, we do not need to re-implement EPT traversal services in the HyperPS Space. In our prototype, we just implement a hook function that will invokes the Switch Gate to retrieve the corresponding EPTP value or EPT Paging Structure value. 
+For example, the function \verb|shadow_walk_init()| is responsible for initializing the struct \verb|kvm_shadow_walk_iterator| structure which will record the value of EPTP and be used in the traversal of EPTs. We added the hook functions inside the function \verb|shadow_walk_init()| to access EPT in HyperPS Space. 
+
+\textbf{EPT Load}: 
+In this paper, we propose a VM-Mark table to tag the mapping relations between the EPT and the corresponding virtual machine. 
+HyperPS will be engaged to check whether the loaded EPT corresponds to the virtual machine at every time the virtual is going to executing VM-Entry. 
+\verb|vcpu_enter_guest()| is an arch-specific function in KVM to start up a virtual machine. 
+As depected in Figure \ref{fig:impept}, we placed a hook before executing the function \verb|vmx_load_mmu_pgd()| inside this function. The function \verb|vmx_load_mmu_pgd()| is the final function that load the EPT. 
+If the EPTP (the base address of the EPT) matches an item in the VM-Mark Table, HyperPS will allow the subsequent operations, such as EPTP Switch and EPT Load, otherwise HyperPS will terminate the execution of the corresponding virtual machine. 
+
+\textbf{EPT Update}: 
+In this paper, we propose a new structure: Page-Mark Table to record the relationships between EPT paging-structures and the physical memory page frames. 
+HyperPS guarantees that physical page frame with write permission can only be accessed with one determinate VM. 
+Physical page frames shared by different machines can only be read-only. 
+Besides, HyperPS guarantees that virtual machines participating the memory sharing are authenticated and recorded by us. 
+Figure \ref{fig:impept} depicts the rough process of how HyperPS handles EPT Update. 
+As mentioned above, in this paper, in addition to changing the permissions of EPT entries, HyperPS also regards the allocation of a new EPT paging-structure as EPT Update. 
+In our prototype, we do not get involved in new physical memory page frame allocation, we focus on operations to EPTs only. 
+The function \verb|__direct_map()| in KVM is the core function to build new EPT entries. HyperPS places hooks inside this function to perfrom security checks. If the allocated physical frame number is untracked in the Page-Mark Table, HyperPS will first invokes the function mentioned above to format this allocated physical page. Then, HyperPS hooks the function \verb|kvm_mmu_get_page()|, the function \verb|link_shadow_page()|, and the function \verb|mmu_set_spte()| into the HyperPS Space.
+In the HyperPS Space, HyperPS will initialize a new EPT paging-structure, and link it the EPT.
+% and link it to the corresponding
+
+\iffalse
+access to one VM or shared with
+the effective isolation between diffe
+In this paper, we define EPT Update as assigning a new EPT paging-structure or updating EPT paging-structures. 
+\verb|__direct_map()| is the core function to build the page table.
+\verb|kvm_mmu_get_page()| 分配一个EPT 页表项 
+\verb|link_shadow_page()| 将新分配到下一级页表页的基地址填充到当前页表项SPTE中
+
+\verb|mmu_set_spte| is the final calling function to set the page table structure. 
+\fi
+
+\iffalse
+if the the EPT and the 
+every time a virtual machine is going to be loaded into Non-Root model. 
+\verb|vcpu_enter_guest()| is an arch-specific function in KVM to start up a virtual machine. 
+In this function, we placed a hook before executing the function \verb|vmx_load_mmu_pgd()| inside this function. 
+This function will will invoke the function \verb|vmx_load_mmu_pgd()| to load the EPT. 
+The KVM will invoke the function \verb|vcpu_enter_guest()| to 
+to load the corresponding EPT 
+Every time the virtual machine runs, execute \verb|vcpu_enter_guest()|, this function load EPT.
+EPT traversal functions in HyperPS Space.
+In our prototype, we do not re-implement all EPT traversal functions in HyperPS Space, but just implement a hook function to retrieve
+to hook these EPT traversal functions. 
+In our prototype, we 
+The stucture \verb|kvm_shadow_walk_iterator| is the most important structure used in the traversal of the EPT. 
+This structure recordes the value of EPTP. 
+% In our prototype,
+
+
+When Guest Address has EPT Violation, KVM uses \verb|kvm_shadow_walk_iterator| to complete the traversal of the EPT, look up the page table entry EPT corresponding to Guest Address step by step, and finally index to the corresponding page table entry in the leaf page table to get the Guest Address corresponding the number of the page frame.
+The function \verb|shadow_walk_init()| takes the physical address of the guest where the EPT Violation occurred and the VCPU with EPT Violation as input. 
+This function is responsible for initializing the struct \verb|kvm_shadow_walk_iterator| structure, preparing to traverse the EPT page table.
+
+In this paper, HyperPS does not hook EPT traversal functions, such as data structure \verb|kvm_shadow_walk_iterator()| in KVM. 
+\verb|kvm_walk_init_using_root()| takes \verb|kvm_shadow_walk_iterator| as input. 
+\verb|shadow_walk_okay()| \verb|shadow_walk_next()|
+
+\verb|kvm_shadow_walk_iterator| records the value of EPTP
+\fi
+% It just maintains EPTs. Thus,
+% what the KVM does in Page Fault Handling is similar to
+% As shown in Figure \ref{fig:impept}, we interfere in the EPT
+% The EPT paging structures are also completed by handing page fault exceptions.
+% the KVM is not responsible for the allocation of physical pages. It just maintains EPTs.
+% Memory allocation are completed with QEMU and the HostOS Kernel.
+% after the QEMU requested allocation
+\iffalse
+\verb|__direct_map()| is the core function to build the page table.
+\verb|kvm_mmu_get_page()| 分配一个EPT 页表项 
+\verb|link_shadow_page()| 将新分配到下一级页表页的基地址填充到当前页表项SPTE中
+
+\verb|mmu_set_spte| is the final calling function to set the page table structure. 
+
+HyperPS needs to hooks all EPT management function in the Normal Space to HyperPS Space. 
+EPT Creation: 
+% we hooked all EPT management operation functions.
+
+If the EPT is supported, the function \verb|init_kvm_tdp_mmu| is responsible for initalizing the MMU. 
+
+Though HyperPS does not interpose the traversal of EPT, Because all EPTs have been moved from the Normal Space to the HyperPS Space, HyperPS also need to hook these EPT traversal functions. 
+
+When Guest Address has EPT Violation, KVM uses \verb|kvm_shadow_walk_iterator| to complete the traversal of the EPT, look up the page table entry EPT corresponding to Guest Address step by step, and finally index to the corresponding page table entry in the leaf page table to get the Guest Address corresponding the number of the page frame.
+The function \verb|shadow_walk_init()| takes the physical address of the guest where the EPT Violation occurred and the VCPU with EPT Violation as input. 
+This function is responsible for initializing the struct \verb|kvm_shadow_walk_iterator| structure, preparing to traverse the EPT page table.
+
+In this paper, HyperPS does not hook EPT traversal functions, such as data structure \verb|kvm_shadow_walk_iterator()| in KVM. 
+\verb|kvm_walk_init_using_root()| takes \verb|kvm_shadow_walk_iterator| as input. 
+\verb|shadow_walk_okay()| \verb|shadow_walk_next()|
+
+\verb|kvm_shadow_walk_iterator| records the value of EPTP
 
 every time the virtual machine runs, execute \verb|vcpu_enter_guest()|, this function load EPT.
 
@@ -444,18 +572,18 @@ when EPT is loaded, \verb|mmu_load_direct_root()| \verb|make_mmu_page_available|
 \subsection{KSM Handle}%
 \label{sub:ksm_handle}
 Kernel Same-page Merging (KSM), used by the KVM Hypervisor, allows KVM guests to share identical memory pages. 
-KSM enables the KVM Hypervisor to examine two or more already running virtual machine and compare their memory. If any memory region or pages are identical, KSM reduces multiple identical memory pages to a single page. 
+KSM enables the KVM Hypervisor to examine two or more already running virtual machines and compare their memory. If any memory region or pages are identical, KSM reduces multiple identical memory pages to a single page. 
 % This merged page is marked Copy-On-Write (COW). If the contents of the page is modified by a guest virtual machine, a new page is created for that guest.
-The KSM adopts two red-black tree: the unstable tree and the stable treee, to implement its service.
-The unstable tree holds pointers to pages which have been found to be unchanged for a period of time. 
+The KSM adopts two red-black trees: the unstable tree and the stable tree, to implement its service.
+The unstable tree holds pointers to pages that have been found to be unchanged for a period of time. 
 The stable tree holds pointers to all the merged pages (KSM pages), sorted by their contents. All pages in the stable tree are write-protected. 
 If the contents of the page is modified by a guest virtual machine, a new page is created for that guest.
 Once a merged page has been recorded into the stable tree, the merged page pointer will never be removed from the stable tree until all users have either modified or unmapped it. 
-At runtime, for each page scanned, the KSM proceeds searching a match first in the stable tree that only contains already shared pages. If a match is found in the stable tree, KSM will merge this scanned page with the KSM page found in the stable. 
-If no match is found in the stable tree, KSM will then search the unstable tree, if a match is found in the unstable tree, the page is merged with the page in the unstable tree, and the resulting KSM merged page is added to the stable tree. 
+At runtime, for each page scanned, the KSM proceeds to search a match first in the stable tree that only contains already shared pages. If a match is found in the stable tree, KSM will merge this scanned page with the KSM page found in the stable. 
+If no match is found in the stable tree, KSM will then search the unstable tree. If a match is found in the unstable tree, the page is merged with the page in the unstable tree, and the resulting KSM merged page is added to the stable tree. 
 
-In this paper, as mentioned in Section \ref{ssub:ept_paging_structure_protection}, we also takes KSM into consideration. 
-\verb|stable_tree_insert()|, \verb|stable_tree_append()| is the funtions in KSM to add the merged page into stable tree. 
+In this paper, as mentioned in Section \ref{ssub:ept_paging_structure_protection}, we also take KSM into consideration. 
+\verb|stable_tree_insert()|, \verb|stable_tree_append()| are the functions in KSM to add the merged page into stable tree. 
 Firstly, As mentioned above, we placed hooks in these stable tree operation functions to trap execution to HyperPS Space. 
 In our prototype, the Page-Mark Table is used to record all physical page frames used by the VM. If a page is merged by KSM, HyperPS fills the \verb|SharedID| with the corresponding VM identifier. 
 Secondly, Merging page results in EPT update too. HyperPS needs to get involved in the page merging process too. 
