@@ -197,7 +197,7 @@ Efficiency & 1.1 & 1.08 \\
 
 HyperBench is a benchmark suite that focuses on measuring cloud performance, especially on measuring HostOS/Hypervisor's capabilities. 
 The HyperBench designs 15 hypervisor benchmarks covering CPU, memory, and I/O. The operation in each benchmark triggers hypervisor-level events, which examines the platform's ability in the target area. We used HyperBench to evaluate the performance loss introduced by HyperPS to the HostOS/Hypervisor.
-The results are shown in Figure \ref{}. For half of the test cases, HyperPS does not introduce performance overhead or little performance loss which is less than 1 percent. 
+The results are shown in Figure \ref{fig:hyperbench}. For half of the test cases, HyperPS does not introduce performance overhead or little performance loss which is less than 1 percent. 
 Inter-Processor Interrupt (IPI) is a special type of interrupt by which one processor may interrupt another in a multiprocessor system. 
 HyperPS introduces 4\% performance overhead in this test suit. 
 The virtual IPI delivery requires two VM exits and needs to write to VMCS. Because the VMCS has been removed in the Normal Space, access to VMCS requires the involvement of HyperPS.  

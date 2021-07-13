@@ -441,7 +441,7 @@ when EPT is loaded, \verb|mmu_load_direct_root()| \verb|make_mmu_page_available|
 % HyperPS instrumented this function to prevnet the adversary from using a unverified page table.
 % the respective hooked functions
 % HyperPS hooks these functions into the HyperPS Space. In the HyperPS Space, Context Management in the HyperPS Space Management component check the invoked parameters and verifies if the write to \verb|VM-Execution Control Fields.EPTP| is legal or not.
-
+\iffalse
 
 \subsection{KSM Handle}%{}. 
 % TODO 添加章节的引用
@@ -473,6 +473,7 @@ In our prototype, we do not get involved in new physical memory page frame alloc
 The function \verb|__direct_map()| in KVM is the core function to build new EPT entries. HyperPS places hooks inside this function to perfrom security checks. If the allocated physical frame number is untracked in the Page-Mark Table, HyperPS will first invokes the function mentioned above to format this allocated physical page. Then, HyperPS hooks the function \verb|kvm_mmu_get_page()|, the function \verb|link_shadow_page()|, and the function \verb|mmu_set_spte()| into the HyperPS Space.
 In the HyperPS Space, HyperPS will initialize a new EPT paging-structure, and link it the EPT.
 % and link it to the corresponding
+\fi
 
 \iffalse
 access to one VM or shared with
