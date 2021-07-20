@@ -2,7 +2,7 @@
 \label{sec:background_and_threat_model}
 
 % 这个章节也是由初稿中的Paranoma中分离出来，但是原来的全景图更换为威胁模型图，要重新写这部分内容
-This section presents some necessary background knowledge to facilitate readers to understand HyperPS and threat model better. 
+% This section presents some necessary background knowledge to facilitate readers to understand HyperPS and threat model better.
 
 % depicted in Figure \ref{pic:panorama}.
 
@@ -59,6 +59,7 @@ the address used is the guest virtual address. the CPU in
 \subsubsection{EPTP Management}%
 \label{ssub:eptp_management}
 % 目前，对EPTP的管理有两种，
+The extended-page-table pointer (EPTP) contains the address of the base EPT table, as well as other EPT configuration information. 
 The value of EPTP is stored in the VM-Execution Control Fields of VMCS. 
 The hypervisor can manage and configure EPTP value in VMX root operation, while Intel also provides \verb|VMFUNC| to allow software in VMX non-root operation to load a new value for the EPTP without VM-Exit.
 % \verb|VMFUNC| is a new instruction introduced by intel. This intruction allows software in VMX non-root operation to invoke a VM function, which is processor functionality enabled and configured by the hypervisor in VMX root operation.
