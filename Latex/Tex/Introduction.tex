@@ -32,7 +32,7 @@ Recently, researchers have proposed a lot of schemes to mitigate such a security
 
 % \paragraph{Hardware-assisted Schemes}%
 % \label{par:hardware}
-Hardware facilities, such as Memory Protection eXtensions(MPX), Encryption Instructions(AES-NI), Software Guard eXtensions(SGX), and Secure Memory Encryption(SME), provide efficient memory isolation. These hardware facilities have already been actively used by researchers to separate the HostOS kernel components and the hypervisor component. 
+Hardware facilities, such as Memory Protection eXtensions(MPX)\cite{ramakesavan2015intel}, Encryption Instructions(AES-NI)\cite{gueron2010intel} , Software Guard eXtensions(SGX)\cite{mckeen2016intel}, and Secure Memory Encryption(SME)\cite{kaplan2016amd}, provide efficient memory isolation. These hardware facilities have already been actively used by researchers to separate the HostOS kernel components and the hypervisor component. 
 % However, these schemes are limited to separate just a small portion of the hypervisor component.
 % However, the strong memory isolation makes the access to the partition application to be strictly restricted.
 However, most of these hardware facilities restrict access to the partition application to a narrow interface.
@@ -44,7 +44,7 @@ There are also some schemes that propose to separate the virtualization componen
 Microhypervisor advocates that the hypervisor should only be responsible for core virtualization privileges to reduce its interaction with the kernel. For example, Trustvisor and Nova adopt microhypervisor to achieve virtualization privilege separation and memory protection. 
 Nested virtualization is another representative approach. 
 Nested virtualization, such as CloudAuditor \cite{Wang2016CloudAuditorAC}, Nosv \cite{REN2017137}, CloudViosr-D \cite{mi2020mostly}, and the Turtles Project \cite{183330}, introduces a higher privilege level and isolated execution environment beyond the original hypervisor. 
-Thus, separated privileges in the nested virtualization environment can no longer be subverted by the original one. For example, CloudVisor \cite{10.1145/2043556.2043576} proposed to use nested virtualization to decouple resource management components into a nested hypervisor. 
+Thus, separated privileges in the nested virtualization environment can no longer be subverted by the original one. For example, CloudVisor \cite{Zhang2011CloudVisor} proposed to use nested virtualization to decouple resource management components into a nested hypervisor. 
 % Nevertheless, These schemes have been deemed unrealistic for the cloud providers in that cloud providers could not reconstruct their cloud architecture, let alone the significant performance losses introduced by nested virtualization.
 % Nevertheless, These schemes have been deemed unrealistic for the cloud providers in that cloud providers could not reconstruct their cloud architecture, let alone the significant performance losses introduced by nested virtualization.
 % Nevertheless, These schemes have been deemed unrealistic for the cloud providers in that cloud providers could not endure the significant performance losses introduced by nested virtualization, let alone reconstructing their cloud environment architecture.

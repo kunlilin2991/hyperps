@@ -154,7 +154,7 @@ EPT operation functions are also hooked into the HyperPS Space too. EPT operatio
 % On a privileged instruction, it switches back to the KVM kernel module,
 
 Lastly, HyperPS also takes DMA attacks into consideration. An attacker with the ability of arbitrary memory access by exploiting DMA vulnerabilities can tamper VMCSes and EPTs. IOMMU carries out access control for DMA access. Thus, in this paper, HyperPS employs IOMMU mechanism to resist DMA attacks.
-In the Hypervisor space, HyperPS found out all the critical data used by IOMMU, and removed the corresponding page table entries that map these data from the page tables. In this paper, HyperPS mainly defines the entrance address of HyperPS, the Page-Mark data, and the VM-Mark data (details about Page-Mark and VM-Mark data structure are illustrated in Section \ref{sub:vm_memory_protection}) as the critical data.
+In the Hypervisor space, HyperPS found out all the critical data used by IOMMU, and removed the corresponding page table entries that map these data from the page tables. In this paper, HyperPS mainly defines the entrance address of HyperPS, the Page-Mark data, and the VM-Mark data (details about Page-Mark and VM-Mark data structure are illustrated in Section \ref{ssub:eptp_protection}) as the critical data.
 In the HyperPS Space, HyperPS intercepts the address mapping function about I/O. At runtime, HyperPS verifies whether the address belongs to the HyperPS Space on receiving signals of executing these IO functions. 
 
 
@@ -214,7 +214,7 @@ HyperPS iterates the VM-Mark table to check if the EPTP is authorized in advance
 
 \begin{table}[]
     \caption{VM-Mark Structure}
-    \resizebox{0.9\linewidth}{4mm}{
+    \resizebox{\linewidth}{!}{
 \begin{tabular}{l|l|l|l}
 \hline
 \textbf{Label}       & \multicolumn{1}{c|}{VMID} & \multicolumn{1}{c|}{EPTID} & \multicolumn{1}{c}{EPT\_Address} \\ \hline
@@ -251,7 +251,7 @@ With the help of the Page-Mark Table, the attacker can no longer map a physical 
 
 \begin{table}[]
     \caption{Page-Mark Structure}
-    \resizebox{0.9\linewidth}{5mm}{
+    \resizebox{\linewidth}{!}{
 \begin{tabular}{l|l|l|l}
 \hline
 \textbf{Label}       & \multicolumn{1}{c|}{OwnerID} & \multicolumn{1}{c|}{SharedID} & \multicolumn{1}{c}{PFN}                                                                  \\ \hline

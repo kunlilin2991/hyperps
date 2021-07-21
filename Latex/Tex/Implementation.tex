@@ -164,7 +164,7 @@ On the other side of Figure \ref{fig:address}, HyperPS safeguard the integral pa
 \fi
 
 \subsection{Switch Gate}
-Switch Gate is designed to allow secure switching between HyperPS Space and the Normal Space, and it is the only interface between the Normal Space and the HyperPS Space. In this paper, HyperPS adopts a technique similar to the one presented in SKEE \ref{Azab2016SKEE}. Our Switch Gate can achieve atomic, deterministic and exclusive too.
+Switch Gate is designed to allow secure switching between HyperPS Space and the Normal Space, and it is the only interface between the Normal Space and the HyperPS Space. In this paper, HyperPS adopts a technique similar to the one presented in SKEE \cite{azab2016skee}. Our Switch Gate can achieve atomic, deterministic and exclusive too.
 % Switch Gate is the only interface between the Normal Space and the HyperPS Space. HyperPS adopts a technique similar to the one presented in SKEE \ref{Azab2016SKEE}. In this paper, our Switch Gate is designed to allow secure switching between HyperPS Space and the Normal Space. Our Switch Gate is designed to be atomic, deterministic and exclusive too.
 As shown in the middle block of Figure \ref{fig:address}, the Switch Gate mainly consists of three parts: the Entry Gate, the Exit Gate and the Shared Buffer. 
 The Entry Gate provides the only entrance for HyperPS Space. The Entry Gate will save the HostOS kernel state into the Shared Buffer first. Secondly, it will clear and disable interrupts. Interrupts could enable the compromised HostOS kernel to crash the atomic execution of Switch Gate. 
@@ -278,7 +278,7 @@ Thus, in our prototype, we dig into KVM to find out all functions that process E
 
 \begin{figure}[htpb]
     \centering
-    \includegraphics[width=0.8\linewidth]{./IMG/imp-ept-handle.pdf}
+    \includegraphics[width=1\linewidth]{./IMG/imp-ept-handle.pdf}
     \caption{HyperPS EPT Procedure}%
     \label{fig:impept}
 \end{figure}
