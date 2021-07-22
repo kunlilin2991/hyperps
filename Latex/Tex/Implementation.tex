@@ -163,7 +163,11 @@ As shown in the Figure \ref{fig:address}, The Switch Gate is the only way that c
 On the other side of Figure \ref{fig:address}, HyperPS safeguard the integral page tables which contain both the kernel code, data and the HyperPS code, data. Besides, HyperPS removed the execution permission of all kernel code to prevent unauthorized code execution.
 \fi
 
-\subsection{Switch Gate}
+% \subsection{Switch Gate}
+\subsection{Secure Switching}%
+\label{sub:secure_switching}
+
+
 Switch Gate is designed to allow secure switching between HyperPS Space and the Normal Space, and it is the only interface between the Normal Space and the HyperPS Space. In this paper, HyperPS adopts a technique similar to the one presented in SKEE \cite{azab2016skee}. Our Switch Gate can achieve atomic, deterministic and exclusive too.
 % Switch Gate is the only interface between the Normal Space and the HyperPS Space. HyperPS adopts a technique similar to the one presented in SKEE \ref{Azab2016SKEE}. In this paper, our Switch Gate is designed to allow secure switching between HyperPS Space and the Normal Space. Our Switch Gate is designed to be atomic, deterministic and exclusive too.
 As shown in the middle block of Figure \ref{fig:address}, the Switch Gate mainly consists of three parts: the Entry Gate, the Exit Gate and the Shared Buffer. 
