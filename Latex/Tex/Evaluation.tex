@@ -8,9 +8,57 @@ In this section, we first analyze the security guarantees provided by HyperPS. T
 \subsection{Security Analysis}
  
 %In section \ref{sec:design}, we discuss in detail how HyperPS achieves memory isolation, and secure interactions between VM and the hypervisor. Just as the threat model described in the section \ref{threat}, an attacker could subvert the upper VMs by conducting attacks such as cross-domain attack with a malicious virtual machine.
+% We first evaluate the security of HyperPS by analyzing how HyperPS can resist various attacks. We organize theses attacks from three perspectives: virtual-machine-related data structures corruption, HyperPS Space violation and DMA attacks.
+We first evaluate the security of HyperPS by analyzing how HyperPS can resist various attacks. We organize these attacks from two perspectives: virtual-machine-related data structures corruption, HyperPS Space violation. 
+
+\subsubsection{Virtual-machine-related Data Structure Corruption}%
+\label{ssub:virtual_machine_related_data_structure_corruption}
+% HyperPS has deprived the HostOS/Hypervisor of privileges of managing physical
+HyperPS has deprivileged the HostOS/Hypervisor and interposed all interactions between HostOS and the physical memory.
+As illustrated above, VMCS and EPT are the two ultimate structures that adversaries want to tamper with. 
+% In our prototype, HyperPS has removed these two data structures from the HostOS/Hypervisor and placed them in the HyperPS Space.
+The adversary can maliciously modify the fields in these two structures with regular memory access, if he gained the location of them in HostOS in advance. 
+However, in our prototype, HyperPS has removed these two data structures from the HostOS/Hypervisor and placed them in the HyperPS Space.
+The adversary can not modify these two data structures with regular memory access. 
+
+As shown in Table \ref{tab3}, we constructed a typical attack (named VMCS Attack) that attempts to modify the field \verb|Guest_CR3| in VMCS with regular memory access. 
+As we expected, Because the VMCS has been removed from the Normal Space, this attack failed with information: Segment Fault. 
+
+EPTs are the most critical data structures that manage the VM's physical memory.
+As illustrated in Section \ref{ssub:attack_examples}, we focus on resisting the Double-Mapping Attack and Remapping Attack if the attacker gets control over EPTs.
+A successful Double-Mapping attack will assign the memory pages that have already been owned by a hostile VM to the victim VM. 
+The Remapping attack also manipulates memory mapping relationships. As illustrated in Section \ref{ssub:attack_examples}, 
+a successful Remapping attack malicious modifies the victim VM's EPT Paging-Structures to another dedicated page frame. 
+In HyperPS Space, because of the Page-Mark Tables and write-protection of EPTs, HyperPS can easily resist these attacks. 
+In our prototype, all page table operation functions in the HostOS have been hooked into HyperPS Space. At runtime, all page table modification operations will be checked under the Page-Mark Table. Illegal page table modification or illegal memory share between VMs will be abandoned by HyperPS. 
+We implemented a real-world attack to examine if HyperPS can resist these attacks. 
+The \verb|CVE-2017-8106| listed in Table \ref{tab3} allows a privileged KVM guest user to access EPT. 
+% and conducts attacks via a single-context \verb|INVEPT| instruction.
+This attack can also conduct attack by invoking a single-context \verb|INVEPT| instruction with a \verb|NULL| EPTP.
+% a \verb|NULL| EPTP
+% with a NULL EPT Pointer
+HyperPS succeed in detecting the execution of this attack, and HyperPS terminated the malicious VM's execution. 
+Because HyperPS has hidden the address of EPT in the HyperPS Space, malicious access to EPT incurred EPT access fault. 
+HyperPS has hooked all VMCS operation functions. Any change to EPTP and EPTP List is supervised by HyperPS. Attackers can not change the EPTP with a malicious value.
+
+
+\iffalse
+and terminating the VM's execution 
+This attack failed in both  
+We implement a real attack, CVE-2017-8106 in kernel version 3.12. A privileged KVM guest OS user accesses EPT, conducts attacks via a single-context INVEPT instruction with a NULL EPT Pointer. Attackers can not implement successfully and incur EPT access fault because HyperPS hides the address of EPT in HyperPS Space and hijacks the loading of EPT. HyperPS verifies the value of EPT to avoid load NULL value. Therefore, HyperPS can avoid subverting memory across VMs including double mapping attack, remapping attack as well as malicious EPT access.
+As we expected, 
+Because the VMCS has been removed from the Normal Space, this attack failed with information: Segment Fault. 
+if a allocated page has been recorded in the Page-Mark Table, HyperPS will check if this mapping change
+In HyperPS Space, the Page-Mark Table and write-protection of EPT prevent this kind of attack. For each new mapping to a VM, HyperPS validates whether the page is already in use according to Used field of Page-Mark structure. Meanwhile, the allocated pages must be marked in the Page-Mark table for tracking. Secondly, another challenge is page remapping attack by a compromised hypervisor from a victim VM to a conspiratorial VM. This attack involves remapping a private page to another address space. To defeat this type of attack, HyperPS ensures that whenever a page is released, its content must be zeroed out before creating a new mapping.
+We implement a real attack, CVE-2017-8106 in kernel version 3.12. A privileged KVM guest OS user accesses EPT, conducts attacks via a single-context INVEPT instruction with a NULL EPT Pointer. Attackers can not implement successfully and incur EPT access fault because HyperPS hides the address of EPT in HyperPS Space and hijacks the loading of EPT. HyperPS verifies the value of EPT to avoid load NULL value. Therefore, HyperPS can avoid subverting memory across VMs including double mapping attack, remapping attack as well as malicious EPT access.
+% attacker is unable to subvert the upper VMs by exploiting the hypervisor vulnerability. 
+%But an attack on memory is not limited to loading malicious EPT Pointer.
+is another data structure
+% The result
+% in case
+% In our prototype, VMCS and EPT are the two data structures that HyperPS protects in the HyperPS Space.
 In this section, we elaborate the security evaluation on how HyperPS achieves memory isolation among VMs through the monitoring interaction data. 
 In addition, we analyze the security of HyperPS itself. Table \ref{tab3} shows the real attack instances in line with the above attack model. 
-
 %However, these two attack vectors, regardless of their attack path, both focus on critical interaction data and data on memory, afterwards, modifying more detailed data, such as the VMCS data structure, EPT and EPT Pointer. Thus, we will elaborate on how HyperPS fends of these attack, and Table \ref{tab3} shows the two real attack instances in line with the above attack model. 
 % the attack instances listed in Table \ref{tab3} perfectly match the description of attacker, so we will use these two instances to specifically analyze security performance. 
 
@@ -21,13 +69,12 @@ To prevent interaction-data leakage, we protect VMCS from the attacker. Firstly,
 % The experimental results show that the access failed, malicious interaction-data accessing is prevented successfully.
   According to the above analysis, the attacker can not access VMCS, and can not conduct further attacks. Therefore, the VM interaction data can be protected by HyperPS.
   %cannot be modified. 
-
+\fi
 
 %CVE-2009-2287 allows attacker to provide invalid value of CR3, which is an important data value in VMCS data structure. Because HyperPS would check the value of CR3 before VM entry instruction is conducted, an attacker has no chance to load the value to physical CR3 register successfully. HyperPS protects all important data values in VMCS data structure. In details, interaction between hypervisor and VMs runs in HyperPS Space, VMCS structure used to record context switching data is hidden in HyperPS Space, so an attacker cannot modify VM states during context switching. HyperPS adopts VM-Mark table to ensure that load consistent EPT for every VM, so attacker cannot modify EPTP. Therefore, the VM states cannot be modified. 
 
 
-
-
+\iffalse
 \textbf{Subverting Memory Across VMs Attack}
 %A kind of attack is subverting memory protection across VMs. 
 %Original hypervisor manages the memory of VM through EPT which controls the address translation of VM, so compromised hypervisor can incur malicious memory access attack, such as double mapping attack and remapping attack. However, HyperPS hides the address of EPT in HyperPS Space and hooks all operations about EPT into HyperPS Space. Page tracking technology can make and prevents double mapping and remapping attack. Page tracking technology can ensure that each physical page has only one owner, verify the ownership of each physical page when EPT updates the mapping, and ensure the safe mapping of physical memory. Page tracking  technology can clear the contents of pages when they are completely released, ensuring information security.
@@ -39,7 +86,7 @@ Firstly, double mapping attack succeeds by allocating memory pages that have alr
 We implement a real attack, CVE-2017-8106 in kernel version 3.12. A privileged KVM guest OS user accesses EPT, conducts attacks via a single-context INVEPT instruction with a NULL EPT Pointer. Attackers can not implement successfully and incur EPT access fault because HyperPS hides the address of EPT in HyperPS Space and hijacks the loading of EPT. HyperPS verifies the value of EPT to avoid load NULL value. Therefore, HyperPS can avoid subverting memory across VMs including double mapping attack, remapping attack as well as malicious EPT access.
 % attacker is unable to subvert the upper VMs by exploiting the hypervisor vulnerability. 
 %But an attack on memory is not limited to loading malicious EPT Pointer.
-
+\fi
 
 \begin{table}
 \centering
@@ -48,9 +95,9 @@ We implement a real attack, CVE-2017-8106 in kernel version 3.12. A privileged K
 \hline
 {\itshape\bfseries Attack} & {\itshape\bfseries Description} \\
 \hline
-Interaction-data Attack & Load a crafted GUEST\_CR3 value\\
+VMCS Attack & Load a crafted GUEST\_CR3 value\\
 \hline
-CVE-2017-8106 & Load a crafted EPT value \\
+EPT Attack (CVE-2017-8106) & Load a crafted EPT value \\
 \hline
 DMA Attack & Access HyperPS Space by DMA \\
 \hline
@@ -59,6 +106,57 @@ Code Injection Attack & Inject code and cover hooked functions to bypass HyperPS
 \end{tabular}
 \end{table}
 
+
+
+% HyperPS Space violation and DMA attacks
+
+\subsubsection{HyperPS Space Violation}%
+\label{ssub:hyperps_space_violation}
+HyperPS Space is a delicate kernel-level secure and isolated execution space that inherits HostOS's privileges of managing physical memory. 
+In this paper, we implement HyperPS Space by using two sets of HostOS page tables and page-table-operation hooking.
+
+The first kind of attack attempts to use regular memory access to maliciously modify the page tables, including the dedicated HostOS kernel page table and the HyperPS Space page table.
+For example, if HyperPS exposes the HyperPS page table base address, then a compromised kernel can compromise the isolation by changing page table entries. Thus security tools in the HyperPS Space will be tampered with. 
+In our prototype, as depicted in Figure \ref{fig:address},
+HyperPS removed the corresponding page table entries that are relative to HyperPS page table base address, code and data. 
+The compromised HostOS can not accurately find this base address from the entire address space. 
+Direct access to the original addresses that are allocated to HyperPS in the Normal Space will fault because of Segment Fault.
+Besides, HyperPS also set the kernel code non-executable when the processor executes instructions in the HyprePS Space. This can prevent the attacker from exploiting kernel vulnerabilities in the HyperPS Space.
+
+The attacker can also abuse control registers to crash HyperPS Space. 
+For example, the register \verb|CR0| controls the W$\oplus${X} privilege of code, the register \verb|CR4| controls if the SMEP mechanism is enabled or not. If an attacker takes over these control registers, he can crash HyperPS Space easily.
+In our prototype, HyperPS has hooked all control-register-operation functions into HyperPS Space. Values that are written to control registers are supervised by HyperPS. HyperPS will reject any malicious modification.
+
+
+% \subsubsection{DMA Attack}%
+% \label{ssub:dma_attack}
+
+
+
+% can decide SMEP mechanism.
+
+
+\iffalse
+DMA attack is described in detail in section \ref{SG}. Attackers can use this feature to read or corrupt arbitrary memory regions. DMA attack is not a threat to HyperPS, because HyperPS is inherently secure against DMA using IOMMU. Remove the corresponding mapping of the critical data from the page table which IOMMU uses. These critical unmapped data includes the entrance address of HyperPS, data recording Page-Mark structure used in VM isolation, VM-Mark structure and so on. DMA attack that aims at modifying the VM memory or the page tables can also be defeated.
+Due to the code of hooked functions including VMCS operations, EPT operations and control register access operations is writable-protection. Accessing CR0 register operation used to set W$\oplus${X} is controlled and page table updating used to change code execution privilege is limited, the attacker can not redirect hooked functions and bypass monitoring.
+Some registers access operations including CR0, CR3, CR4, are controlled and hooked to HyperPS Space. CR0 register can control the W$\oplus${X} privilege of code, CR3 can control the loading of the page table and CR4 can decide SMEP mechanism. Protection for page table, hooked functions and regs, plays a role mutually in protection for HyperPS. 
+
+% loading the base address of a malicious HostOS kernel page table, and crash the HyperPS Space.
+% if the HyperPS page table base address is exposed to the attacker
+Page table protection has been introduced in section \ref{SG}. The entry address mapping of the HyperPS Space page table is deleted from the old page table to prevent the kernel from accessing HyperPS Space directly through the page table mapping. When HyperPS Space is active, the kernel code does not have any executable permissions in case of attacking running processes in HyperPS Space. An attacker may attack in two ways.
+First, the attacker may try to directly access the new page table address on the kernel page table by virtual address mapping. When he accesses it, there is page fault due to the absence of address mapping.
+Second, the attacker may run kernel code while HyperPS Space is active to attack programs running in HyperPS Space. This can be prevented because of the absence of executable privilege of kernel code.
+isolation
+In this paper, the security of this space is guaranteed by the synergy of two important techniques: Two Page Table and Page-Table-Operation hooks.
+we implement this 
+% We have adopt a set of techiques to guarantee the isolation of this execution space.
+HyperPS Space is used to hold HyperPS code, data and security tools. Thus, the isolation of HyperPS Space is one of the key requirement of HyperPS. 
+In this paper, we achieve 
+HyperPS deprive the HostOS of privileges on managing physical memory. 
+\fi
+
+
+\iffalse
 \textbf{Destroying HyperPS Space}
 HyperPS is created by relying on page tables.
 % When HyperPS does not work, the original kernel with high privileges can access any page tables and modify them. It can also access control registers casually, redirect hooked functions used to monitor previously, and even maliciously destroy HyperPS Space through DMA. 
@@ -86,13 +184,17 @@ Some registers access operations including CR0, CR3, CR4, are controlled and hoo
 %In addition, the memory can be accessed through DMA operations bypassing the MMU, except for accesses by executing memory accessing instructions.
  DMA attack is described in detail in section \ref{SG}. Attackers can use this feature to read or corrupt arbitrary memory regions. DMA attack is not a threat to HyperPS, because HyperPS is inherently secure against DMA using IOMMU. Remove the corresponding mapping of the critical data from the page table which IOMMU uses. These critical unmapped data includes the entrance address of HyperPS, data recording Page-Mark structure used in VM isolation, VM-Mark structure and so on. DMA attack that aims at modifying the VM memory or the page tables can also be defeated.
 
+\fi
+
+
+
 \begin{figure}[htpb]
     \centering
-    \includegraphics[width=0.8\linewidth]{IMG/performance.pdf}
+    \includegraphics[width=0.95\linewidth]{IMG/performance.pdf}
     \caption{SPECCPU 2006 and Bonnie++ Performance Measurement Results}%
     \label{fig5}
 \end{figure}
-%FIXME 修改图为HyperPS
+%修改图为HyperPS
 
 \subsection{Performance Evaluation}
 In this section, we evaluate the performance of our HyperPS prototype. All the experiments were conducted on a physical server with a 2.0 GHz 64 core Intel processor and 32 GB memory. The Host system runs Ubuntu 16.04 LTS with a kernel version of 4.4.1. We created more than five virtual machines. The guest is configured with 1GB of memory and runs Ubuntu 16.04 LTS Service with a kernel version of 4.4.1. 
@@ -209,7 +311,7 @@ set-pt is another benchmark that operates on EPT. HyperPS introduced about 4 per
 
 \begin{figure}[htpb]
     \centering
-    \includegraphics[width=0.8\linewidth]{./IMG/hyperbench.png}
+    \includegraphics[width=0.9\linewidth]{./IMG/hyperbench.png}
     \caption{Virtualization Performance Measurement Results using HyperBench}
     \label{fig:hyperbench}
 \end{figure}
