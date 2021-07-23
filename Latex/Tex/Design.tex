@@ -39,16 +39,24 @@ Thus, in this paper, we present HyperPS to deprive the Hypervisor of privileges 
 % Neither isolation between VMs nor virtual-physical mapping relationships in a VM will inevitable be tamperred if the Hypervisor has been compromised.
 
 Figure \ref{fig:design} depicts the details on the architecture of HyperPS. 
-Firstly, as shown in Figure \ref{fig:design}, we create a delicate kernel-level secure and isolated execution space, called HyperPS Space, to inherit privileges of managing physical memory that originally belonged to the compromised Hypervisor. 
-Original functions about physical memory management in the compromised Hypervisor, such as EPT operations, EPTP switching operations, and some VMCS operations, are hooked into the HyperPS Space. 
-However, there are still some cases where attackers subvert memory management data structures by using regular memory access. Attackers can also bypass the hooked functions by introducing new malicious VMX assembly code. HyperPS, in consideration of these cases, removed VMCS and EPT from the original Hypervisor space and placed them in the HyperPS Space. 
+Firstly, the compromised HostOS/Hypervisor is stripped of privileges of managing physical memory. 
+As shown in Figure \ref{fig:design}, original functions about physical memory management (e.g., EPT operations, EPTP switching operations, and some VMCS operations) in the compromised Hypervisor are hooked into the HyperPS Space. 
+% However, it is far from sufficient to just hook these functions
+However, hooking these functions is far from sufficient to deprive the HostOS/Hypervisor of the capabilities of managing physical memory completely.
+% Firstly, as shown in Figure \ref{fig:design}, HyperPS deprives the compromised HostOS kernel/Hypervisor with privileges of managing physical memory.
+% Firstly, as shown in Figure \ref{fig:design}, we create a delicate kernel-level secure and isolated execution space, called HyperPS Space, to inherit privileges of managing physical memory that originally belonged to the compromised Hypervisor.
+% Original functions about physical memory management (e.g., EPT operations, EPTP switching operations, and some VMCS operations) in the compromised Hypervisor are hooked into the HyperPS Space.
+% There are still some extraordinary cases that attackers can subvert memory management data structures by using regular memory access. For example, attackers can inject newly malicious VMX assembly code so that all hooked functions will be bypassed.
+There are still some extraordinary cases in which attackers can subvert memory management data structures. For example, attackers can inject newly malicious VMX assembly code so that all hooked functions will be bypassed. The attacker can also access memory management data structures by using regular memory access if he gets their locations in advance.
+% can bypass the hooked functions by introducing new malicious VMX assembly code.
+HyperPS, in consideration of these cases, removed VMCS and EPT from the original Hypervisor space and placed them in the HyperPS Space. 
 % For cases where attackers subvert memory management data structures by using regular memory access, and cases where attackers bypass the hooked functions by introducing new malicious VMX assembly code
 % use regular memory access to tamper with
 % For cases where an attacker uses regular memory access or newly introduced malicious VMX assembly code to bypass the hooked functions and tamper with the relevant memory management data structures, HyperPS removed VMCS and EPT, which are crucial to virtualization, from the original Hypervisor space and places them in the HyperPS Space.
-Secondly, in the HyperPS Space, we introduce two new data structures, called Page-Mark structure and VM-Mark structure, to tag the mapping relations between the physical frames and the virtual machines. With the help of these two data structures, even if an attacker attempts to tamper EPT Paging-structures with malicious value through a legal function invocation, HyperPS can still effectively detect such attacks and resist them.
-Lastly, Switch Gate is the only interface between the Normal Space and the HyperPS Space.
+Secondly, in the HyperPS Space, we introduce two new data structures, called Page-Mark structure and VM-Mark structure, to tag the mapping relations between the physical frames and the virtual machines. With the help of these two data structures, even if an attacker can tamper EPT Paging-structures with malicious value through a legal function invocation, HyperPS can still effectively detect such attacks and resist them.
+Lastly,as shown in Figure \ref{fig:design}, we create a delicate kernel-level secure and isolated execution space, called HyperPS Space, to inherit privileges of managing physical memory that originally belonged to the compromised Hypervisor. We adopt a set of techniques to guarantee the isolation of the HyperPS Space. Context switching from the compromised HostOS kernel/Hypervisor to the HyperPS Space exclusively passes through a designated Switch Gate. Actually, the Switch Gate is the only interface between the Normal Space and the HyperPS Space.
 
-%FIXME 图中的内容添加虚拟机退出的线，removed的字段加粗 pptt是表 修改成表的形式
+%图中的内容添加虚拟机退出的线，removed的字段加粗 pptt是表 修改成表的形式
 
 \begin{figure*}[htpb]
     \centering
@@ -260,13 +268,23 @@ With the help of the Page-Mark Table, the attacker can no longer map a physical 
     \label{tb:pagemark}
 \end{table}
 
-
-
 % the attribution of different physical memory page frames.
-
-
-
 With the help of VM-Mark Table and Page-Mark Table, HyperPS can effectively protect the isolation between VMs and the correct virtual-physical mapping relationships in a VM. 
+
+
+
+
+
+% \subsection{HyperPS Space}%
+% \label{sub:hyperps_space}
+
+
+
+
+
+
+
+
 
 
 

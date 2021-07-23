@@ -29,7 +29,7 @@ These approaches redesign hypervisor greatly. In contrary, HyperPS adopts a feas
 \subsection{The Same Privilege Level Isolation}
 Some efforts, 
 %ED-Monitor\cite{Deng2017Dancing},
- SKEE\cite{Azab2016SKEE} and SecPod\cite{Wang2015SecPod},\cite{Deng2017Dancing}, adopt the same privilege-level idea to avoid performance overhead of inter-level translation.
+ SKEE\cite{azab2016skee} and SecPod\cite{Wang2015SecPod},\cite{Deng2017Dancing}, adopt the same privilege-level idea to avoid performance overhead of inter-level translation.
 % ED-Monitor presents a novel approach that enables practical event-driven monitoring for compromised hypervisor in cloud computing, adopts "the same privilege level" protection against an untrusted hypervisor. The created monitor is placed at the same privilege level and in the same space with hypervisor. It relies on the mutual-protection of a
 %unique pair of the techniques: Instrumentation-based Privilege Restriction (IPR) and Address Space Randomization (ASR). At the high level, IPR intercepts the most privileged operations in the Hypervisor and transfers these operations to ED-monitor, while ASR hides ED-monitor in the address space from the Hypervisor.
  %SKEE provides a lightweight secure kernel-level execution environment, it is placed at the same privilege-level with kernel. SKEE is exclusively designed for commodity ARM platforms using system characteristics of ARM. 

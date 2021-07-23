@@ -65,7 +65,10 @@ Because all page table entries that are relative to HyperPS Space have been remo
 % normal memory access beyond the HyperPS Space can not visit memory regions of HyperPS Space.
 memory regions used by HyperPS are carved out of the memory ranges accessible to the HostOS kernel. 
 % Thirdly, HyperPS will set a new GDT, IDT and stack for itself.
-At last, HyperPS returns execution back to the Normal Space by loading the address of the dedicated page table into the control register CR3. 
+Thirdly, HyperPS returns execution back to the Normal Space by loading the address of the dedicated page table into the control register CR3. 
+Forthly, as depicted in Figure \ref{fig:address}, we remove the execution bit in all kernel code (especially loadable kernel module code) entries of the page table used by HyperPS. 
+HyperPS does not allow any execution of kernel code in the HyperPS Space in case attacker exploit kernel vulnerabilities in the HyperPS Space.
+At last, we erase the page table entry that records the base address of the HyperPS page table.
 
 On the execution of the three steps mentioned above, HyperPS has established an execution environment. 
 However, at this time, this execution environment does not have the conditions for isolation and security, since the kernel can still modify this memory layout or access permission. 
@@ -250,7 +253,7 @@ KSM是特别要处理的内容
 \label{sub:privilege_deprivation_and_management}
 
 
-In HyperPS, the HostOS has been deprived of the privileges of managing EPTs. This gives HyperPS complete control over the guest VM's virtual-physical memory mapping and protection. In our prototype, we hook all KVM's VMX and EPT functions to redirect EPT management to our HyperPS Space.
+In HyperPS, the HostOS has been deprived of the privileges of managing physical memory. This gives HyperPS complete control over the guest VM's virtual-physical memory mapping and protection. In our prototype, we hook all KVM's VMX and EPT functions to redirect EPT management to our HyperPS Space.
 
 % TODO 上面说要保护管理EPT，但是这里为什么要从VMCS入手，这里要说明
 \subsubsection{VMCS Hook}%
