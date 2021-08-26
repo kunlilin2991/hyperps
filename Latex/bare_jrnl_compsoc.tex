@@ -477,12 +477,16 @@ E-mail:tubibo@iie.ac.cn
 % in the abstract or keywords.
 \IEEEtitleabstractindextext{%
 \begin{abstract}
-The abstract goes here.
+The HostOS or Hypervisor constitutes the most important cornerstone of today's commercial cloud environment security. However, the HostOS/Hypervisor, especially the QEMU-KVM architecture, is not immune to all vulnerabilities and exploitations. Recently, researchers have put forward lots of schemes to protect Virtual Machines under the compromised HostOS/Hypervisor. However, some of these schemes rely on special hardware facilities, while other require large modification to current commercial cloud architecture. 
+
+In this paper, we present a novel scheme, named HyperPS, to implement virtual machine protection under the compromised HostOS/Hypervisor. The key idea of HyperPS is to deprive the HostOS/Hypervisor of core virtualization privileges, especially the privileges of managing the physical memory, into an isolated and trusted execution environment. We have implemented a fully functional prototype based on the KVM in Intel x86\_64 architecture. Experiment results show that HyperPS has achieved an acceptable trade-off between security and performance. 
+%HyperPS deprives the  HostOS of the core virtual
+%The abstract goes here.
 \end{abstract}
 
 % Note that keywords are not normally used for peerreview papers.
 \begin{IEEEkeywords}
-Computer Society, IEEE, IEEEtran, journal, \LaTeX, paper, template.
+Virtual Machine Protection, Security, KVM.
 \end{IEEEkeywords}}
 
 
