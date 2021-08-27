@@ -25,6 +25,7 @@ The linux kernel provides not only provides the core virtualization infrastructu
 \fi
 
 Integrating the hypervisor capabilities into a standard Linux kernel, the KVM-based virtualized environment not only benefits from all the ongoing work on the Linux kernel itself, but also shares countless vulnerabilities with it. A successful exploit, especially a privilege escalation exploit, against the Linux kernel will also subvert the entire virtualization environment. 
+It is time to consider that how to protect Virtual Machines if the HostOS or the Hypervisor is no longer safy enough.
 Recently, researchers have proposed a lot of schemes to mitigate such a security concern. 
 % A lot of works have been proposed to mitigate such a security concern.
 
@@ -105,9 +106,11 @@ Extended Page-Table Technology (EPT) is introduced by Intel to support the virtu
 When EPT is in use, guest-physical addresses are translated by traversing a set of EPT paging structures to produce physical addresses that are used to access memory. Everything in the guest virtual machine`s memory cannot be safe if the HostOS/Hypervisor has been compromised. For example, a compromised HostOS/Hypervisor could remap one guest physical page frame to another physical page frame that holds the malicious code.
 \fi
 
-In this paper, we introduce a novel scheme, named HyperPS, to implement hypervisor monitoring based on privilege separation without relying on any special hardware or reconstructing the hypervisor. The key idea of HyperPS is to separate the core virtualization privileges, especially the privileges of managing the physical memory, into an isolated execution environment alongside the HostOS kernel,
-so that the security of virtual machines can be strongly protected, even if the HostOS/hypervisor has been compromised. Our isolated execution does not rely on a special hardware feature, nor demand a higher privilege level. Our isolated execution actually shares the same privilege level with the HostOS kernel. 
-
+In this paper, we introduce a novel scheme, named HyperPS, to implement Virtual Machines protection against compromised HostOS or hypervisor.
+HyperPS guarantees the virtual machine's runtime security 
+based on privilege separation. 
+HyperPS does not relying on any special hardware or reconstructs current commercial cloud architecture. The key idea of HyperPS is to separate the core virtualization privileges possessed by the HostOS/Hypervisor, especially the privileges of managing the physical memory, into an isolated execution environment alongside the HostOS kernel. 
+So that the security of virtual machines can be strongly protected, even if the HostOS/hypervisor has been compromised. Our isolated execution does not rely on a special hardware feature, nor demand a higher privilege level. Our isolated execution actually shares the same privilege level with the HostOS kernel. 
 
 % In this paper, HyperPS separates the privilege of managing these two structures: VMCS (especially the EPTP filed in this structure) and EPT, from the HostOS/Hypervisor into an isolated execution environment. Any access during VM exit (any VMX root operation) to these two structures will be hooked and be redirected to the isolated execution environment. Code in the original HostOS/Hypervisor environment can no longer read or write VMCSs and EPTs directly.
 
