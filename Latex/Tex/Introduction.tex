@@ -24,7 +24,7 @@ The linux kernel provides not only provides the core virtualization infrastructu
 
 \fi
 
-Integrating the hypervisor capabilities into a standard Linux kernel, the KVM-based virtualized environment not only benefits from all the ongoing work on the Linux kernel itself but also shares countless vulnerabilities with it. A successful exploit, especially a privilege escalation exploit, against the Linux kernel will also subvert the entire virtualization environment. 
+Integrating the hypervisor capabilities into a standard Linux kernel, the KVM-based virtualized environment not only benefits from all the ongoing work on the Linux kernel itself, but also shares countless vulnerabilities with it. A successful exploit, especially a privilege escalation exploit, against the Linux kernel will also subvert the entire virtualization environment. 
 Recently, researchers have proposed a lot of schemes to mitigate such a security concern. 
 % A lot of works have been proposed to mitigate such a security concern.
 
@@ -32,18 +32,20 @@ Recently, researchers have proposed a lot of schemes to mitigate such a security
 
 % \paragraph{Hardware-assisted Schemes}%
 % \label{par:hardware}
-Hardware facilities, such as Memory Protection eXtensions(MPX)\cite{ramakesavan2015intel}, Encryption Instructions(AES-NI)\cite{gueron2010intel} , Software Guard eXtensions(SGX)\cite{mckeen2016intel}, and Secure Memory Encryption(SME)\cite{kaplan2016amd}, provide efficient memory isolation. These hardware facilities have already been actively used by researchers to separate the HostOS kernel components and the hypervisor component. 
+Hardware facilities, such as Memory Protection eXtensions(MPX)\cite{ramakesavan2015intel}, Encryption Instructions(AES-NI)\cite{gueron2010intel} , Software Guard eXtensions(SGX)\cite{mckeen2016intel} and Secure Memory Encryption(SME)\cite{kaplan2016amd}, provide efficient and strong memory isolation. These hardware facilities have already been actively used by researchers to separate the HostOS kernel components and the hypervisor component. 
 % However, these schemes are limited to separate just a small portion of the hypervisor component.
 % However, the strong memory isolation makes the access to the partition application to be strictly restricted.
 However, most of these hardware facilities restrict access to the partition application to a narrow interface.
 % However, access to the partition application in the protected memory has been strictly restricted with limited interfaces.
-This makes it extremely tough to leverage these hardware facilities to separate the entire virtualization component from the kernel. Furthermore, most of these hardware facilities need developers to reconstruct their protected applications or build the whole program from scratch. 
+This limitation makes it extremely tough to leverage these hardware facilities to separate the entire virtualization component from the kernel. Furthermore, most of these hardware facilities need developers to reconstruct their protected applications or rebuild the whole program from scratch. 
 % \paragraph{Reconstruct Hypervisor}%
 % \label{par:reconstruct_hypervisor}
 There are also some schemes that propose to separate the virtualization component from the rest of the kernel by reconstructing the HostOS or Hypervisor.
-Microhypervisor advocates that the hypervisor should only be responsible for core virtualization privileges to reduce its interaction with the kernel. For example, Trustvisor and Nova adopt microhypervisor to achieve virtualization privilege separation and memory protection. 
+Microhypervisor (\cite{engler1995exokernel,steinberg2010nova,whitaker2002scale,liedtke1995micro,klein2009sel4,shapiro1999eros,baumann2009multikernel}) 
+advocates that the hypervisor should only be responsible for core virtualization privileges to reduce its interaction with the kernel. For example, Trustvisor and Nova adopt microhypervisor to achieve virtualization privilege separation and memory protection. 
 Nested virtualization is another representative approach. 
-Nested virtualization, such as CloudAuditor \cite{Wang2016CloudAuditorAC}, Nosv \cite{REN2017137}, CloudViosr-D \cite{mi2020mostly}, and the Turtles Project \cite{183330}, introduces a higher privilege level and isolated execution environment beyond the original hypervisor. 
+Nested virtualization (\cite{Wang2016CloudAuditorAC,REN2017137,mi2020mostly,183330,das2014nested,wasserman2013nested,yassour2008direct}) introduces a higher privilege level and isolated execution environment beyond the original hypervisor. 
+% Nested virtualization, such as CloudAuditor \cite{Wang2016CloudAuditorAC}, Nosv \cite{REN2017137}, CloudViosr-D \cite{mi2020mostly}, and the Turtles Project \cite{183330}, introduces a higher privilege level and isolated execution environment beyond the original hypervisor.
 Thus, separated privileges in the nested virtualization environment can no longer be subverted by the original one. For example, CloudVisor \cite{Zhang2011CloudVisor} proposed to use nested virtualization to decouple resource management components into a nested hypervisor. 
 % Nevertheless, These schemes have been deemed unrealistic for the cloud providers in that cloud providers could not reconstruct their cloud architecture, let alone the significant performance losses introduced by nested virtualization.
 % Nevertheless, These schemes have been deemed unrealistic for the cloud providers in that cloud providers could not reconstruct their cloud architecture, let alone the significant performance losses introduced by nested virtualization.
@@ -137,7 +139,7 @@ The Extended Page-Table (EPT) is used to support the virtualization of physical 
 
 
 We have implemented a full funtional prototype based on the KVM in Intel x86\_64 architecture.
-In our prototype, we separate the privilege of managing these two structures: VMCS (especially the EPTP filed in this structure) and EPT, from the HostOS/Hypervisor into an isolated execution environment. Any access during VM exit (any VMX root operation) to these two structures will be hooked and be redirected to the isolated execution environment. Code in the original HostOS/Hypervisor environment can no longer read or write VMCSs and EPTs directly. 
+In our prototype, we separate the privilege of managing these two structures: VMCS (especially the EPTP filed in this structure) and EPT, from the HostOS/Hypervisor into an isolated and trusted execution environment. All access during VM exit (All VMX root operations) to these two structures will be hooked and be redirected to the isolated execution environment. In other word, code in the original HostOS/Hypervisor environment can no longer read or write VMCSs and EPTs directly. 
 Our prototype modified 300 SLOC (Source Lines of Code) of the original Linux kernel and introduced approximately 4K SLOC of new kernel code. 
 We also conducted several security and performance experiments. The results show that HyperPS has gained an acceptable trade-off between security and performance.
 % The expermental results show a trivial performance overhead.
