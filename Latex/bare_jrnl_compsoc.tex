@@ -380,7 +380,7 @@
 % Linebreaks \\ can be used within to get better formatting as desired.
 % Do not put math or special symbols in the title.
 % \title{Bare Demo of IEEEtran.cls for\\ IEEE Computer Society Journals}
-\title{HyperPS: A Hypervisor Monitoring Approach Based on Privilege Separation}
+\title{HyperPS: A Virtual-Machine Memory Protection Approach using Hypervisor Privilege Separation}
 %
 %
 % author names and IEEE memberships
@@ -480,7 +480,7 @@ E-mail:tubibo@iie.ac.cn
 \begin{abstract}
     The HostOS or Hypervisor constitutes the most important cornerstone of today's commercial cloud environment security. Unfortunately, the HostOS/Hypervisor, especially the QEMU-KVM architecture, is not immune to all vulnerabilities and exploitations. Recently, researchers have put forward lots of schemes to protect Virtual Machines under the compromised HostOS/Hypervisor. However, some of these schemes rely on special hardware facilities, while other (e.g., Nested Virtualization schemes) require large modification to current commercial cloud architecture. 
 
-In this paper, we present a novel scheme, named HyperPS, to implement virtual machine protection under the compromised HostOS/Hypervisor. The key idea of HyperPS is to deprive the HostOS/Hypervisor of core virtualization privileges, especially the privileges of managing the physical memory, into an isolated and trusted execution environment. We have implemented a fully functional prototype based on the KVM in Intel x86\_64 architecture. Experiment results show that HyperPS has achieved an acceptable trade-off between security and performance. 
+In this paper, we present a novel scheme, named HyperPS, to implement virtual machine protection under the compromised HostOS/Hypervisor. The key idea of HyperPS is to deprive the HostOS/Hypervisor of the privileges of managing the physical memory into an isolated and trusted execution environment. We have implemented a fully functional prototype based on the KVM in Intel x86\_64 architecture. Experiment results show that HyperPS has achieved an acceptable trade-off between security and performance. 
 %HyperPS deprives the  HostOS of the core virtual
 %The abstract goes here.
 \end{abstract}

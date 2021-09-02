@@ -24,8 +24,8 @@ The linux kernel provides not only provides the core virtualization infrastructu
 
 \fi
 
-Integrating the hypervisor capabilities into a standard Linux kernel, the KVM-based virtualized environment not only benefits from all the ongoing work on the Linux kernel itself, but also shares countless vulnerabilities with it. A successful exploit, especially a privilege escalation exploit, against the Linux kernel will also subvert the entire virtualization environment. 
-It is time to consider that how to protect Virtual Machines if the HostOS or the Hypervisor is no longer safy enough.
+Integrating the hypervisor capabilities into a standard Linux kernel, the KVM-based virtualized environment not only benefits from all the ongoing work on the Linux kernel itself, but also shares countless vulnerabilities with it. A successful exploit, especially a privilege escalation exploit, against the Linux kernel will subvert the entire virtualization environment. 
+It is time to consider that how to protect Virtual Machines if the HostOS or the Hypervisor is no longer trusted.
 Recently, researchers have proposed a lot of schemes to mitigate such a security concern. 
 % A lot of works have been proposed to mitigate such a security concern.
 
@@ -107,11 +107,26 @@ When EPT is in use, guest-physical addresses are translated by traversing a set 
 \fi
 
 In this paper, we introduce a novel scheme, named HyperPS, to implement Virtual Machines protection against compromised HostOS or hypervisor.
+The key idea of HyperPS is to deprive the HostOS/Hypervisor of the privileges of managing the physical memory, and replace these privileges into an isolated and trusted execution environment alongside the HostOS kernel.
+% separate the core virtualization privileges possessed by the HostOS/Hypervisor, especially the privileges of managing the physical memory, into an isolated execution environment alongside the HostOS kernel. 
+Thus, even the HostOS/hypervisor has been compromised, we can still provide a strong protection for virtual machines's memories. 
+HyperPS does not rely on any special hardware or need to reconstruct current commercial cloud architecture. Actually, HyperPS shares the same privilege level with the HostOS kernel and can be compatible to current commercial cloud architecture. 
+
+\iffalse
+HyperPS is comp
+
+Our isolated execution does not rely on a special hardware feature, nor demand a higher privilege level. Our isolated execution actually shares the same privilege level with the HostOS kernel. 
+
+
+, especially the isolated
+So that the security of virtual machines can be strongly protected, even if the HostOS/hypervisor has been compromised
+
 HyperPS guarantees the virtual machine's runtime security 
 based on privilege separation. 
 HyperPS does not relying on any special hardware or reconstructs current commercial cloud architecture. The key idea of HyperPS is to separate the core virtualization privileges possessed by the HostOS/Hypervisor, especially the privileges of managing the physical memory, into an isolated execution environment alongside the HostOS kernel. 
-So that the security of virtual machines can be strongly protected, even if the HostOS/hypervisor has been compromised. Our isolated execution does not rely on a special hardware feature, nor demand a higher privilege level. Our isolated execution actually shares the same privilege level with the HostOS kernel. 
 
+So that the security of virtual machines can be strongly protected, even if the HostOS/hypervisor has been compromised. Our isolated execution does not rely on a special hardware feature, nor demand a higher privilege level. Our isolated execution actually shares the same privilege level with the HostOS kernel. 
+\fi
 % In this paper, HyperPS separates the privilege of managing these two structures: VMCS (especially the EPTP filed in this structure) and EPT, from the HostOS/Hypervisor into an isolated execution environment. Any access during VM exit (any VMX root operation) to these two structures will be hooked and be redirected to the isolated execution environment. Code in the original HostOS/Hypervisor environment can no longer read or write VMCSs and EPTs directly.
 
 
