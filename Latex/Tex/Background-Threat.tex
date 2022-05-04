@@ -28,7 +28,7 @@ Memory mapped pages are used for bulk transfer of data between QEMU and KVM. \ve
 Virtual-machine Control Structure is a data structure used in Virtual Machine eXtensions (VMX). It controls VMX non-root operations (guest virtual machine execution operations) and VMX transitions. Access to the VMCS is managed through the VMCS pointer (one per logical processor). The VMCS pointer is read and written using the instructions \verb|VMPTRST| and \verb|VMPTRLD|. In general, the hypervisor configures a VMCS using \verb|VMREAD|, \verb|VMWRITE|, and \verb|VMCLEAR| instructions. A hypervisor could use a different VMCS for each virtual machine that it supports. For a virtual machine with multiple logical processors, the hypervisor could use a different for each logical processor. A logical processor may also maintain a number of VMCSs that are active, however, at any given time, at most one of the active VMCSs is the \textbf{current} VMCS. VMX instructions operate only on the \textbf{current} VMCS. 
 
 %这段写的不好，没有写出危害的具体内容，应该突出VMCS就是唯一的接口，VM的所有的行为都是在VMCS的instruct下的
-A compromised Hostos/hypervisor can force the guest virtual machine exit by tramper VM-Execution Control fields and VM-exit control fields in VMCS and tramper the guest virtual machine by writing Guest-State Area fields. 
+A compromised Hostos/hypervisor can force the guest virtual machine exit by tampering VM-Execution Control fields and VM-exit control fields in VMCS and tamper the guest virtual machine by writing Guest-State Area fields. 
 
 % 一个被危害的hypervisor可以强迫虚拟机退出，并通过篡改其vmcs中的field等信息实现对guest VM 的危害。
 
@@ -44,7 +44,7 @@ EPT allows each virtual machine to manage its page table (not the EPT), without 
 If EPT is enabled, guest-physical addresses are translated by traversing a set of EPT Paging-structures to produce physical addresses that are used to access memory.
 In addition to translating a guest-physical address to a physical address, EPT specifies the privileges that software is allowed when accessing the address. Attempts at disallowed accesses are called EPT violations and cause VM exits.
 
-A compromised Hostos/hypervisor could tramper EPT Paging-structures so that the virtual machine will execute arbitrary malicious code without knowing it. 
+A compromised Hostos/hypervisor could tamper EPT Paging-structures so that the virtual machine will execute arbitrary malicious code without knowing it. 
 Moreover, a compromised Hostos/Hypervisor could access any data in the guest virtual machine with the help of virtual machine introspection.
 
 \iffalse
@@ -115,7 +115,7 @@ Second, the attacker can tamper these two data structures through direct memory 
 
 As illustrated in Section \ref{sub:background}, Hypervisor manages VM's physical memory through EPT, and it configures and manages EPTs through the EPTP field in VMCS. Therefore, these two data structures: VMCS (especially the EPTP field) and EPT, become the key target for an adversary to tamper VMs. 
 In this paper, we emphasize that the attacker does not settle for the denial of service attack, but attempts to inject malicious code into the victim VM. 
-Therefore, the momory, both it is access permissions and mapping relationships, is the most important target. 
+Therefore, the memory, both it is access permissions and mapping relationships, is the most important target. 
 
 As depicted in Figure \ref{fig:threat}, 
 An adversary can exploit vulnerabilities to ``jail-break'' into the Hostos/Hypervisor, while he can also subvert Hostos/Hypervisor by exploiting vulnerabilities in the Hostos (both the kernel and the user process).
@@ -144,7 +144,7 @@ the malicious VM's EPT
 map the victim VM's memory 
 % describe in detail the
 % memory-related
-the momory 
+the memory 
 For example, as shown Step 1 in Figure \ref{fig:threat}, an attacker can tamper with the EPTP field in VMCS directly, thereby establishing a dedicated and malicous EPT Paging-structure hierarchy.
 The attacker can also tamper with EPT directly (Step 2).
 , if the attacker acquired these two data structures' memory locations before.  
@@ -195,10 +195,30 @@ We also take into account the fact that attacker already knows the deployment of
 
 
 \subsection{Threat Model} \label{sub:threatmodel}
-In this paper, 
-We assume that the Hostos/Hypervisor has been compromised and controlled by the powerful adversary. The adversary can turn off kernel security mechanisms, such as DEP, SMEP, SMAP, and so on. The adversary can tamper fields of VMCSs and EPTs with dedicated malicious values. The adversary can also tamper VMCSs and EPTs through DMA write or regular memory access to them.  
-
+In this paper,  we do not care about how the adversary brings down the HostOS/Hypervisor. 
+We assume that the Hostos/Hypervisor has been compromised and controlled by the powerful adversary.The adversary can turn off kernel security mechanisms, such as Date Execution Prevention(DEP), Supervisor Mode Execution Protection(SMEP), Supervisor Mode Access Prevention(SMAP), and so on.
 We assume that the adversary does not possess the capability to conduct side channel attack and Hardware-based attack. We also assume that the adversary is unwilling to conduct the Denial of Service attack (DOS). In this paper, we assume that hardware resources are trusted, including processor, buses, BIOS/UEFI, and so on. 
+We assume that if the adversary has acquired the memory locations where VMCS or EPTs locate at before, he can tamper fields of VMCSs and EPTs through DMA write or regular memory access. 
+We do not limit how the adversary constructs payload to invoke DMA write and regular memory access functions. For example, we assume that the adversary can load a malicious loadable kernel module to overwrite VMCS fields with a pointer, we also assume that the adversary can construct a Code-Reuse-Attack (ROP, JOP, COOP, etc) payload to invoke functions that update VMCS or EPT. 
+However, we do not consider instruction-level attacks. For example, we can not prevent the attacker from tampering VMCS or EPT with by executing the \verb|VMX| instruction directly. This is because that we can not hook instructions. Besides, some \verb|VMX| instructions, such as \verb|VMLAUNCH|, takes the VMCS identifier instead of a memory location as the input, which means the adversary does not need to know the current VMCS' memory location at all. 
+% it does not rely on memory location. 
+% field in these two data structures with \verb|VMX| instructions,  
+
+% the adversary can tamper fields of VMCSs and EPTs through DMA write or regular memory access to them. 
+
+% with dedicated malicious values. The adversary can also tamper VMCSs and EPTs through DMA write or regular memory access to them.  
+% In details, if the adversary has acquired the memory locations where VMCS or EPTs locate at before,  
+
+% we assume that the attacker can tamper these two data structures through direct memory write operations. The attacker can write these two data structures either through Direct Memory Access (DMA) or through regular memory access, if the attacker acquired these two data structures' memory locations before.  
+
+
+
+% In details, we assume that the attacker can tamper VMCSs and EPTs with one of the following methods. First, the attacker can tamper any field in these two data structures with \verb|VMX| instructions, if the attacker has gained the root processor privilege. 
+% Second, the attacker can tamper these two data structures through direct memory write operations. The attacker can write these two data structures either through Direct Memory Access (DMA) or through regular memory access, if the attacker acquired these two data structures' memory locations before.  
+% We assume that 
+% the adversary can tamper fields of VMCSs and EPTs with dedicated malicious values. The adversary can also tamper VMCSs and EPTs through DMA write or regular memory access to them.  
+
+% We assume that the adversary does not possess the capability to conduct side channel attack and Hardware-based attack. We also assume that the adversary is unwilling to conduct the Denial of Service attack (DOS). In this paper, we assume that hardware resources are trusted, including processor, buses, BIOS/UEFI, and so on. 
 
 
 
