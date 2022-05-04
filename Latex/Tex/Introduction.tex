@@ -108,9 +108,18 @@ When EPT is in use, guest-physical addresses are translated by traversing a set 
 
 In this paper, we introduce a novel scheme, named HyperPS, to implement Virtual Machines protection against compromised HostOS or hypervisor.
 The key idea of HyperPS is to deprive the HostOS/Hypervisor of the privileges of managing the physical memory, and replace these privileges into an isolated and trusted execution environment alongside the HostOS kernel.
-% separate the core virtualization privileges possessed by the HostOS/Hypervisor, especially the privileges of managing the physical memory, into an isolated execution environment alongside the HostOS kernel. 
 Thus, even the HostOS/hypervisor has been compromised, we can still provide a strong protection for virtual machines's memories. 
 HyperPS does not rely on any special hardware or need to reconstruct current commercial cloud architecture. Actually, HyperPS shares the same privilege level with the HostOS kernel and can be compatible to current commercial cloud architecture. 
+In details, firstly, we removed the most two important structures, VMCS and EPT, from the HostOS/Hypervisor space, so that the compromised HostOS can not access these structures with a pointer any more. Secondly,  
+% we deprive of the HostOS with access permission to   
+we create a software-based and kernel-level trusted execution environment, called HyperPS Space, by using two dedicated page tables. HyperPS Space holds the removed structures, VMCS and EPTs, and executes our security functions. 
+Thirdly, functions that update fields in VMCS and EPT, along with the creation functions, are hooked into the created HyperPS Space, so that only certified updates by HyperPS can be accepted and synchronized to VMCS and EPT.
+Lastly, we verify Control Registers values at each context switch (normal context switch and context switch in entering the HyperPS Space), so that the compromised HostOS can not tamper or bypass our HyperPS Space by constructing a dedicated kernel page table.  
+% only 
+% update that has been authorized by HyperPS 
+% separate the core virtualization privileges possessed by the HostOS/Hypervisor, especially the privileges of managing the physical memory, into an isolated execution environment alongside the HostOS kernel. 
+% Thus, even the HostOS/hypervisor has been compromised, we can still provide a strong protection for virtual machines's memories. 
+% HyperPS does not rely on any special hardware or need to reconstruct current commercial cloud architecture. Actually, HyperPS shares the same privilege level with the HostOS kernel and can be compatible to current commercial cloud architecture. 
 
 \iffalse
 HyperPS is comp
