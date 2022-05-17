@@ -246,7 +246,7 @@ The field \verb|PFN| is the first address of the physical memory page frame. Hyp
 Kernel Same-page Merging (KSM), used by the KVM, allow for a greater guest density of identical or similar guest operating system by avoiding memory duplication.
 % KVM guests to share identical memory pages
 % However, In some virtualization environment, some particular physical memory page frames may be shared between differnt VMs.
-For example, different VMs with the same kernel may share the same physical memory page frames that hold the kernel code. HyperPS takes this situation into consideration too. If one physical memory page frame is shared between VMs, HyperPS fills the field \verb|SharedID| with the one of the VM's \verb|OwnerID|.
+For example, different VMs with the same kernel may share the same physical memory page frames that hold the kernel code. HyperPS takes this situation into consideration too. If one physical memory page frame is shared between VMs, HyperPS fills the field \verb|SharedID| with the one of the VM's \verb|OwnerID|. More details about \verb|Page-Mark Structure| are illustrated in Section \ref{sub:ksm_handle}.
 
 HyperPS has hooked all functions about EPT operations.
 At runtime, control flow will be redirected to the HyperPS Space when the Hypervisor invokes these functions. 
