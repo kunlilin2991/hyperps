@@ -129,7 +129,7 @@ As mentioned above, we emphasize memory security, so that we have detailed the v
 An attacker can tamper with the EPTP field in VMCS directly, thereby establishing a dedicated and malicious EPT Paging-structure hierarchy, which is the Attack Path 1 in Figure \ref{fig:threat}. 
 The attacker can also tamper with EPT Paging-structures directly (Attack Path 2).
 However, in some scenarios, the attacker does not have the ability to subvert the victim VM's VMCSes or EPT directly. 
-In some cases, the attacker can only tamper with page tables, which is Path 3 in Figure \ref{fig:threat}. However, the VM's memory in the QEMU-KVM environment is not only managed by the EPT, but also managed by the Hostos's page tables (QEMU process's page tables). An attacker could subvert the victim VM by tampering with the corresponding QEMU process's page table entries. The situation would be extremely severe when the VM (QEMU process) requests a new memory area or delivers a page fault interruption (in this situation, Hostos page tables are involved because of page fault, EPT is involved because of establishing new EPT Paging-structure. 
+In some cases, the attacker can only tamper with page tables, which is Path 3 in Figure \ref{fig:threat}. However, the VM's memory in the QEMU-KVM environment is not only managed by the EPT, but also managed by the Hostos's page tables (QEMU process's page tables). An attacker could subvert the victim VM by tampering with the corresponding QEMU process's page table entries. The situation would be extremely severe when the VM (QEMU process) requests a new memory area or delivers a page fault interruption. In this situation, Hostos page tables are involved because of page fault, EPT is involved because of establishing new EPT Paging-structure. 
 In other cases,  
 an attacker may only be able to modify the EPT Paging-structures of a malicious VM (Attack Path 4 and Attack Path 5 in Figure \ref{fig:threat}). 
 The attacker could break the memory isolation between VM's by exploiting memory or page table vulnerabilities. For example, VMs with same guestos kernel may share the same kernel code memory frames. An attacker may subvert the victim VM by exploiting Copy-On-Write (COW) vulnerabilities in Hostos. 
@@ -145,16 +145,16 @@ map the victim VM's memory
 % describe in detail the
 % memory-related
 the memory 
-For example, as shown Step 1 in Figure \ref{fig:threat}, an attacker can tamper with the EPTP field in VMCS directly, thereby establishing a dedicated and malicous EPT Paging-structure hierarchy.
+For example, as shown Step 1 in Figure \ref{fig:threat}, an attacker can tamper with the EPTP field in VMCS directly, thereby establishing a dedicated and malicious EPT Paging-structure hierarchy.
 The attacker can also tamper with EPT directly (Step 2).
 , if the attacker acquired these two data structures' memory locations before.  
 In details, we assume that the attacker has gained the root processor privilege, so that he can tamper any field in VMCSes or EPT with \verb|VMX| instructions. We also assume that 
 In details, we assume that the attacker can tamper VMCSs and EPTs with one of the following methods. We does not limit the adversary 
 First, the attacker can tamper any field in these two data structures with \verb|VMX| instructions, if the attacker has gained the root processor privilege. 
-For example, as shown Step 1 in Figure \ref{fig:threat}, an attacker can tamper with the EPTP field in VMCS directly, thereby establishing a dedicated and malicous EPT Paging-structure hierarchy.
+For example, as shown Step 1 in Figure \ref{fig:threat}, an attacker can tamper with the EPTP field in VMCS directly, thereby establishing a dedicated and malicious EPT Paging-structure hierarchy.
 The attacker can also tamper with EPT directly (Step 2).
 Second, the attacker can tamper these two data structures through direct memory write operations. The attacker can write these two data structures either through Direct Memory Access (DMA) or through regular memory access, if the attacker acquired these two data structures' memory locations before.  
-For example, as shown Step 1 in Figure \ref{fig:threat}, an attacker can tamper with the EPTP field in VMCS directly, thereby establishing a dedicated and malicous EPT Paging-structure hierarchy.
+For example, as shown Step 1 in Figure \ref{fig:threat}, an attacker can tamper with the EPTP field in VMCS directly, thereby establishing a dedicated and malicious EPT Paging-structure hierarchy.
 The attacker can also tamper with EPT directly (Step 2).
 Second, the attacker can tamper these two data structures through direct memory write operations. The attacker can write these two data structures either through Direct Memory Access (DMA) or through regular memory access, if the attacker acquired these two data structures' memory locations before.  
 %direct write to fields in these two data structures or 
@@ -189,7 +189,8 @@ For the remapping attack, there are VM1 (attacker) and VM2 (victim). A physical 
 \end{figure}
 
 \textbf{Attacks to Kernel Page Tables}: 
-We also take into account the fact that attacker already knows the deployment of HyperPS. As depicted in Figure \ref{fig:threat}, key components, such as Kernel Page Tables, Control Registers, to create the secure and isolated execution environment are also protected by us. More details about the creation of the secure and isolated execution environment are illustrated in Section \ref{sub:hyperps_space}. 
+We also take into account the fact that attacker already knows the deployment of HyperPS. As depicted in Figure \ref{fig:threat}, key components, such as Kernel Page Tables, Control Registers, to create the secure and isolated execution environment are also protected by us. We have designed mechanisms to validate the loaded values in HyperPS Space in case of potential attacks to them in the HostOS/Hypervisor Space.  
+More details about the creation of the secure and isolated execution environment are illustrated in Section \ref{sub:hyperps_space}. 
 %添加关于章节的引用
  
 
@@ -198,8 +199,8 @@ We also take into account the fact that attacker already knows the deployment of
 In this paper,  we do not care about how the adversary brings down the HostOS/Hypervisor. 
 We assume that the Hostos/Hypervisor has been compromised and controlled by the powerful adversary.The adversary can turn off kernel security mechanisms, such as Date Execution Prevention(DEP), Supervisor Mode Execution Protection(SMEP), Supervisor Mode Access Prevention(SMAP), and so on.
 We assume that the adversary does not possess the capability to conduct side channel attack and Hardware-based attack. We also assume that the adversary is unwilling to conduct the Denial of Service attack (DOS). In this paper, we assume that hardware resources are trusted, including processor, buses, BIOS/UEFI, and so on. 
-We assume that if the adversary has acquired the memory locations where VMCS or EPTs locate at before, he can tamper fields of VMCSs and EPTs through DMA write or regular memory access. 
-We do not limit how the adversary constructs payload to invoke DMA write and regular memory access functions. For example, we assume that the adversary can load a malicious loadable kernel module to overwrite VMCS fields with a pointer, we also assume that the adversary can construct a Code-Reuse-Attack (ROP, JOP, COOP, etc) payload to invoke functions that update VMCS or EPT. 
+We assume that if the adversary has acquired the memory locations where VMCS or EPTs locate at in the HostOS before. The adversary attempts to tamper fields in VMCSs and EPTs by using DMA write or regular memory access (access the memory with a pointer (e,g, memset or memcpy)). 
+We do not limit the attack vector that how the adversary constructs payload to invoke DMA write and regular memory access functions. For example, the adversary can load a malicious loadable kernel module to overwrite VMCS fields with a pointer, the adversary can also construct a Code-Reuse-Attack (ROP, JOP, COOP, etc) payload to invoke functions that update Control Registers, VMCSes or EPTs. 
 However, we do not consider instruction-level attacks. For example, we can not prevent the attacker from tampering VMCS or EPT with by executing the \verb|VMX| instruction directly. This is because that we can not hook instructions. Besides, some \verb|VMX| instructions, such as \verb|VMLAUNCH|, takes the VMCS identifier instead of a memory location as the input, which means the adversary does not need to know the current VMCS' memory location at all. 
 % it does not rely on memory location. 
 % field in these two data structures with \verb|VMX| instructions,  
