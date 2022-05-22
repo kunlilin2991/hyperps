@@ -83,7 +83,7 @@ so that the security of virtual machines can be strongly protected, even if the 
 Extended Page-Table Technology (EPT) is introduced by Intel to support the virtualization of physical memory.
 % The Extended Page-Table (EPT) is used to support the virtualization of physical memory.
 When EPT is in use, guest-physical addresses are translated by traversing a set of EPT paging structures to produce physical addresses that are used to access memory. Everything in the guest virtual machine`s memory cannot be safe if the HostOS/Hypervisor has been compromised. For example, a compromised HostOS/Hypervisor could remap one guest physical page frame to another physical page frame that holds the malicious code.
-Extended Page Table Pointer (EPTP) is a hardware register that contains the address of the base of EPT table, as well as EPT configuration information. 
+Extended Page Table Pointer (EPTP) is a hardware register that contains the base address of EPT table, as well as EPT configuration information. 
 Virtual Machine Control Structure (VMCS) is the most important structure in a virtualization environment. It manages transitions into and out of virtual-machine extensions (VMX) non-root operations (VM entries and VM exits) as well as processor behavior in VMX non-root operation. 
 The value of EPTP is configured and managed by VMCS. 
 If the HostOS/Hypervisor has been subverted, the value of EPTP will no longer be safe. The attacker can load a new EPTP, thereby establishing a dedicated and malicious EPT Paging-structure hierarchy. 
@@ -106,13 +106,13 @@ Extended Page-Table Technology (EPT) is introduced by Intel to support the virtu
 When EPT is in use, guest-physical addresses are translated by traversing a set of EPT paging structures to produce physical addresses that are used to access memory. Everything in the guest virtual machine`s memory cannot be safe if the HostOS/Hypervisor has been compromised. For example, a compromised HostOS/Hypervisor could remap one guest physical page frame to another physical page frame that holds the malicious code.
 \fi
 
-In this paper, we introduce a novel scheme, named HyperPS, to implement Virtual Machines protection against compromised HostOS or hypervisor.
+In this paper, we introduce a novel scheme, named HyperPS, to implement virtual machines protection against compromised HostOS or Hypervisor.
 The key idea of HyperPS is to deprive the HostOS/Hypervisor of the privileges of managing the physical memory, and replace these privileges into an isolated and trusted execution environment alongside the HostOS kernel.
-Thus, even the HostOS/hypervisor has been compromised, we can still provide a strong protection for virtual machines's memories. 
+Thus, even the HostOS/Hypervisor has been compromised, we can still provide a strong protection for virtual machines's memories. 
 HyperPS does not rely on any special hardware or need to reconstruct current commercial cloud architecture. Actually, HyperPS shares the same privilege level with the HostOS kernel and can be compatible to current commercial cloud architecture. 
 In details, firstly, we removed the most two important structures, VMCS and EPT, from the HostOS/Hypervisor space, so that the compromised HostOS can not access these structures with a pointer any more. Secondly,  
 % we deprive of the HostOS with access permission to   
-we create a software-based and kernel-level trusted execution environment, called HyperPS Space, by using two dedicated page tables. HyperPS Space holds the removed structures, VMCS and EPTs, and executes our security functions. 
+we create a software-based and kernel-level trusted execution environment, called HyperPS Space, by using two dedicated page tables. HyperPS Space holds the removed structures, VMCS and EPTs, and executes security functions. 
 Thirdly, functions that update fields in VMCS and EPT, along with the creation functions, are hooked into the created HyperPS Space, so that only certified updates by HyperPS can be accepted and synchronized to VMCS and EPT.
 Lastly, we verify Control Registers values at each context switch (normal context switch and context switch in entering the HyperPS Space), so that the compromised HostOS can not tamper or bypass our HyperPS Space by constructing a dedicated kernel page table.  
 % only 
@@ -128,7 +128,7 @@ Our isolated execution does not rely on a special hardware feature, nor demand a
 
 
 , especially the isolated
-So that the security of virtual machines can be strongly protected, even if the HostOS/hypervisor has been compromised
+So that the security of virtual machines can be strongly protected, even if the HostOS/Hypervisor has been compromised
 
 HyperPS guarantees the virtual machine's runtime security 
 based on privilege separation. 
