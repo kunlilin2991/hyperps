@@ -28,7 +28,7 @@ EPTs are the most critical data structures that manage the VM's physical memory.
 As illustrated in Section \ref{ssub:attack_examples}, we focus on resisting the Double-Mapping Attack and Remapping Attack if the attacker gets control over EPTs.
 A successful Double-Mapping attack will assign the memory pages that have already been owned by a hostile VM to the victim VM. 
 The Remapping attack also manipulates memory mapping relationships. As illustrated in Section \ref{ssub:attack_examples}, 
-a successful Remapping attack malicious modifies the victim VM's EPT Paging-Structures to another dedicated page frame. 
+a successful Remapping attack maliciously modifies the victim VM's EPT Paging-structures to another dedicated page frame. 
 In HyperPS Space, because of the Page-Mark Tables and write-protection of EPTs, HyperPS can easily resist these attacks. 
 In our prototype, all page table operation functions in the HostOS have been hooked into HyperPS Space. At runtime, all page table modification operations will be checked under the Page-Mark Table. Illegal page table modification or illegal memory share between VMs will be abandoned by HyperPS. 
 We implemented a real-world attack to examine if HyperPS can resist these attacks. 
@@ -201,7 +201,7 @@ In this section, we evaluate the performance of our HyperPS prototype. All the e
 
 %All experiments are done on a server with 64 cores and 32 GB memory, running at 2.0 GHz and 5 VMs. 
 
-In our prototype, the HostOS kernel is modified so that HyperPS Space is initialized during the boot up sequence. This includes creating a new memory page table for HyperPS, allocating memory pages, as well as creating Page-Mark table and VM-Mark table. This process introduces security verification for pages according to Page-Mark Table, and security access to VMCS in HyperPS Space during VM Exit/Entry sequence.
+In our prototype, the HostOS kernel is modified so that HyperPS Space is initialized during the boot up sequence. This includes creating a new memory page table for HyperPS, allocating memory pages, as well as creating Page-Mark Table and VM-Mark Table. This process introduces security verification for pages according to Page-Mark Table, and security access to VMCS in HyperPS Space during VM Exit/Entry sequence.
 The kernel is modified to place hooks upon some functions.
 %control registers, accessing VMCS operations, and accessing EPT operations。
 % in order to achieve HyperPS Space, VM Monitoring and VM Isolation.
@@ -209,7 +209,7 @@ The kernel is modified to place hooks upon some functions.
 % introducing worlds switching overhead using switch gate.
 
 %We do not directly compare HyperPS with previous software approaches, as they cannot support all functions simultaneously. 
-To evaluate the performance of HyperPS, we experimented with SPECCPU 2006, Bonnie++ and HyperBench. The SPECCPU 2006 measure HyperPS's impact to compute-intensive workloads, such as gcc; The Bonnie++ quantifies the performance overhead introduced by HyperPS for file systems; and the HyperBench measure the overall cloud performance under HyperPS, especially impact to the KVM Hypervisor.
+To evaluate the performance of HyperPS, we experimented with SPECCPU 2006, Bonnie++ and HyperBench\cite{wei2019hyperbench}. The SPECCPU 2006 measure HyperPS's impact to compute-intensive workloads, such as gcc; The Bonnie++ quantifies the performance overhead introduced by HyperPS for file systems; and the HyperBench measure the overall cloud performance under HyperPS, especially impact to the KVM Hypervisor.
 All the experiments were repeated fifty times in the cloud environment with HyperPS and in the original cloud environment (the baseline).
 In these fifty experiments, we set up different workloads (different numbers of guest VMs with different memory sizes) to simulate different environments in the real cloud environment. 
 Besides, we also measured the VM load time to evaluate the impact on VM initialization.
@@ -237,7 +237,7 @@ HyperPS introduced at most 3\% performance overhead.
 However, there are still several benchmarks, such as mcf, astar and xalancbmk whose results are higher than average. 
 They caused a performance loss of 6\%. 
 Most of these workloads have large and fluctuating memory footprints. 
-It's not surprising as the HyperPS takes over physical memory management. Frequent memory request incurs HyperPS involvement to index the Page-Mark Table and verifies the legality of EPT paging-structure updates.
+It's not surprising as the HyperPS takes over physical memory management. Frequent memory request incurs HyperPS involvement to index the Page-Mark Table and verifies the legality of EPT Paging-structure updates.
 % handles Page-Mark structure and verifies the legality of page mapping when EPT updates.
 We can conclude that, for most compute-intensive applications without large memory footprints, HyperPS has a similar performance as the baseline cloud environment. 
 For applications with large memory footprints, 
@@ -297,14 +297,14 @@ Efficiency & 1.1 & 1.08 \\
 \end{table}
 
 
-HyperBench is a benchmark suite that focuses on measuring cloud performance, especially on measuring HostOS/Hypervisor's capabilities. 
+HyperBench is a benchmark suite that focuses on measuring virtualization capabilities, especially on measuring HostOS/Hypervisor's capabilities. 
 The HyperBench designs 15 hypervisor benchmarks covering CPU, memory, and I/O. The operation in each benchmark triggers hypervisor-level events, which examines the platform's ability in the target area. We used HyperBench to evaluate the performance loss introduced by HyperPS to the HostOS/Hypervisor.
 The results are shown in Figure \ref{fig:hyperbench}. For half of the test cases, HyperPS does not introduce performance overhead or little performance loss which is less than 1 percent. 
 Inter-Processor Interrupt (IPI) is a special type of interrupt by which one processor may interrupt another in a multiprocessor system. 
 HyperPS introduces 4\% performance overhead in this test suit. 
 The virtual IPI delivery requires two VM exits and needs to write to VMCS. Because the VMCS has been removed in the Normal Space, access to VMCS requires the involvement of HyperPS.  
 HyperPS also poses a higher impact on the cold-access test suit (about 5 percent). 
-As mentioned above, the KVM constructs EPT with page faults. Data accessed in the cold-access benchmark is not loaded into physical memory in advance. Thus, the EPT does not map these data before. In our prototype, HyperPS interposes EPT paging-structure initialization and EPT Page Fault handle procedure. 
+As mentioned above, the KVM constructs EPT with page faults. Data accessed in the cold-access benchmark is not loaded into physical memory in advance. Thus, the EPT does not map these data before. In our prototype, HyperPS interposes EPT Paging-structure initialization and EPT Page Fault handle procedure. 
 All EPT Updates are completed in the HyperPS Space. This is the reason why HyperPS introduced performance loss in this test suit. 
 As shown the Figure \ref{fig:hyperbench}, compared with the cold-access benchmark, the performance overhead introduced by HyperPS in the hot-access benchmark is obviously smaller. 
 set-pt is another benchmark that operates on EPT. HyperPS introduced about 4 percent more performance overhead than the baseline because all EPT operations are hooked into the HyperPS Space. 
