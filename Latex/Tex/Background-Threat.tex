@@ -12,11 +12,13 @@
 \subsubsection{QEMU-KVM}%
 \label{ssub:qemu_kvm}
 QEMU is a generic and open-source machine emulator and virtualizer. QEMU can use other hypervisors, like XEN or KVM, to use CPU extensions for virtualization. When used as a virtualizer, QEMU achieves near native performances by executing the guest code directly on the host CPU.
-Kernel-based Virtual Machine (KVM) is an open-source virtualization technology that converts Linux into a type-1 (bare-metal) hypervisor. KVM is a part of the Linux kernel that shares all the Linux kernel's operating system-level components -such as the memory manager, process scheduler, security manager, and more to run VMs. Every VM is implemented as a regular Linux process, scheduled by the standard Linux scheduler, with dedicated virtual hardware like a network card, memory, and disks. KVM mainly consists of a loadable kernel module, kvm.ko, that provides the core virtualization infrastructure and a processor specific module, kvm-intel.ko or kvm-amd.ko.
+Kernel-based Virtual Machine (KVM) is an open-source virtualization technology that converts Linux into a type-1 (bare-metal) hypervisor. KVM is a part of the Linux kernel that shares all the Linux kernel's operating system-level components, such as the memory manager, process scheduler, security manager, and more to run VMs. Every VM is implemented as a regular Linux process, scheduled by the standard Linux scheduler, with dedicated virtual hardware like a network card, memory, and disks. KVM mainly consists of a loadable kernel module, kvm.ko, that provides the core virtualization infrastructure and a processor specific module, kvm-intel.ko or kvm-amd.ko.
 In a virtualization environment, KVM does not work on its own. It is only an API provided by the kernel for userspace. End users typically use KVM through QEMU, where it is present as an acceleration method.
 For the QEMU-KVM architecture, KVM interacts with QEMU (QEMU runs at the user space) in two ways: through device file \verb|/dev/kvm| and through memory mapped pages.
 % KVM interacts with user space - in most case QEMU - in two ways: through device file \verb|/dev/kvm| and through memory mapped pages.
+\iffalse
 Memory mapped pages are used for bulk transfer of data between QEMU and KVM. \verb|/dev/kvm| is the main API exposed by KVM. It supports a set of \verb|ioctl|s which allow QEMU to manage VMs and interact with them.
+\fi
 % 怎么引出HostOS的问题
 % Since KVM is a part of the linux kernel, the Linux and the QEMU
 % leverages the linux kernel's system-level
@@ -132,7 +134,7 @@ However, in some scenarios, the attacker does not have the ability to subvert th
 In some cases, the attacker can only tamper with page tables, which is Path 3 in Figure \ref{fig:threat}. However, the VM's memory in the QEMU-KVM environment is not only managed by the EPT, but also managed by the HostOS's page tables (QEMU process's page tables). An attacker could subvert the victim VM by tampering with the corresponding QEMU process's page table entries. The situation would be extremely severe when the VM (QEMU process) requests a new memory area or delivers a page fault interruption. In this situation, HostOS page tables are involved because of page fault, EPT is involved because of establishing new EPT Paging-structure. 
 In other cases,  
 an attacker may only be able to modify the EPT Paging-structures of a malicious VM (Attack Path 4 and Attack Path 5 in Figure \ref{fig:threat}). 
-The attacker could break the memory isolation between VM's by exploiting memory or page table vulnerabilities. For example, VMs with same guestos kernel may share the same kernel code memory frames. An attacker may subvert the victim VM by exploiting Copy-On-Write (COW) vulnerabilities in HostOS. 
+The attacker could break the memory isolation between VM's by exploiting memory or page table vulnerabilities. For example, VMs with same guestOS kernel may share the same kernel code memory frames. An attacker may subvert the victim VM by exploiting Copy-On-Write (COW) vulnerabilities in HostOS. 
 
 \iffalse
 share the same guestOS kernel code section in same physical memory frames
@@ -168,7 +170,7 @@ Second, the attacker can tamper these two data structures through direct memory 
 We present several attacks to illustrate how an attack subvert VMs by through tampering VMCS and EPT.
 
 \textbf{VMCS Subversion}:
-Attackers can tamper fields of VMCS in VM Exit stage. For example, modifying the value of \verb|HOST_RIP| register and writing a malicious program address to this register will cause a control flow hijacking attack. Modifying the value of privilege register, CR0, will close the Date Execution Prevention(DEP) mechanism, and modifying the value of CR4 register will close the Supervisor Mode Execution Protection(SMEP) mechanism or Supervisor Mode Access Prevention(SMAP).
+Attackers can tamper fields of VMCS in VM Exit stage. For example, modifying the value of \verb|HOST_RIP| register and writing a malicious program address to this register will cause a control flow hijacking attack. Modifying the value of privilege register, CR0, will close the Date Execution Prevention(DEP), and modifying the value of CR4 register will close the Supervisor Mode Execution Protection(SMEP) or Supervisor Mode Access Prevention(SMAP)\cite{brookes2016exoshim}.
 
 
 \textbf{EPT Subversion}: 

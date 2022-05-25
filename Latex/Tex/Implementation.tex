@@ -58,7 +58,7 @@ Figure \ref{fig:address} describes the address layout of HyperPS.
 % hostos的kernel并不能在boot的时候就直接完成两套页表的建立。
 % As shown in this figure, HyperPS has to load itself into memory at first.
 As shown in this figure, at the initialization stage, HyperPS has to load itself into memory firstly before it got executed. 
-At this stage, all resources are managed by the Hostos kernel, HyperPS needs to request enormous numbers of memory allocation from the Hostos. These memories are used to hold HyperPS data and security tools that inherit compromised hypervisor's privileges of managing physical memory. 
+At this stage, all resources are managed by the HostOS kernel, HyperPS needs to request enormous numbers of memory allocation from the HostOS. These memories are used to hold HyperPS data and security tools that inherit compromised hypervisor's privileges of managing physical memory. 
 In our prototype, we do not guarantee that all allocated memories are continuous in physical memory. 
 Secondly, HyperPS creates a new page table that has already excluded the HyperPS Space. As shown in Figure \ref{fig:address}, this dedicated page table is placed in the Normal Space and accessed by the compromised HostOS kernel. 
 Because all page table entries that are relative to HyperPS Space have been removed from that dedicated page table, 
@@ -171,11 +171,11 @@ On the other side of Figure \ref{fig:address}, HyperPS safeguard the integral pa
 \label{sub:secure_switching}
 
 
-Switch Gate is designed to allow secure switching between HyperPS Space and the Normal Space, and it is the only interface between the Normal Space and the HyperPS Space. In this paper, HyperPS adopts a technique similar to the one presented in SKEE \cite{azab2016skee}. Our Switch Gate can achieve atomic, deterministic and exclusive too.
+Switch Gate is designed to allow secure switching between HyperPS Space and the Normal Space, and it is the only interface between the Normal Space and the HyperPS Space. In this paper, HyperPS adopts a technique similar to the one presented in SKEE \cite{azab2016skee}. Our Switch Gate also achieve atomic, deterministic and exclusive as the SKEE does.
 % Switch Gate is the only interface between the Normal Space and the HyperPS Space. HyperPS adopts a technique similar to the one presented in SKEE \ref{Azab2016SKEE}. In this paper, our Switch Gate is designed to allow secure switching between HyperPS Space and the Normal Space. Our Switch Gate is designed to be atomic, deterministic and exclusive too.
 As shown in the middle block of Figure \ref{fig:address}, the Switch Gate mainly consists of three parts: the Entry Gate, the Exit Gate and the Shared Buffer. 
 The Entry Gate provides the only entrance for HyperPS Space. The Entry Gate will save the HostOS kernel state into the Shared Buffer first. Secondly, it will clear and disable interrupts. Interrupts could enable the compromised HostOS kernel to crash the atomic execution of Switch Gate. 
-Then HyperPS will enter the HyperPS Space by loading the page table used by HyperPS Space into register Cr3. 
+Then HyperPS will enter the HyperPS Space by loading the page table used by HyperPS Space into register CR3. 
 % load the page table used by HyperPS Space into register CR3.
 The address of this page table is visible to HostOS kernel, however, as mentioned above, because all page table management functions and control register management functions have been hooked by HyperPS, the compromised HostOS kernel cannot subvert the HyperPS Space by using unverified page tables. 
 Lastly, we clear interrupt with \verb|CLI| instruction again before we execute any instruction in the HyperPS Space. 
@@ -338,7 +338,7 @@ For example, the function \verb|shadow_walk_init()| is responsible for initializ
 
 \textbf{EPT Load}: 
 In this paper, we propose a VM-Mark Table to tag the mapping relations between the EPT and the corresponding virtual machine. 
-HyperPS will be engaged to check whether the loaded EPT corresponds to the virtual machine every time the virtual is going to executing VM-Entry. 
+HyperPS will be engaged to check whether the loaded EPT corresponds to the virtual machine every time the virtual is going to execute VM-Entry. 
 \verb|vcpu_enter_guest()| is an arch-specific function in KVM to start up a virtual machine. 
 As depicted in Figure \ref{fig:impept}, we placed a hook before executing the function \verb|vmx_load_mmu_pgd()| inside this function. The function \verb|vmx_load_mmu_pgd()| is the final function that load the EPT. 
 If the EPTP (the base address of the EPT) matches an item in the VM-Mark Table, HyperPS will allow the subsequent operations, such as EPTP Switch and EPT Load. Otherwise, HyperPS will terminate the execution of the corresponding virtual machine. 
@@ -351,7 +351,7 @@ Besides, HyperPS guarantees that virtual machines participating the memory shari
 Figure \ref{fig:impept} depicts the rough process of how HyperPS handles EPT Update. 
 As mentioned above, in this paper, in addition to changing the permissions of EPT entries, HyperPS also regards the allocation of a new EPT Paging-structure as EPT Update. 
 In our prototype, we do not get involved in new physical memory page frame allocation. We focus on operations to EPTs only. 
-The function \verb|__direct_map()| in KVM is the core function to build new EPT entries. HyperPS places hooks inside this function to perfrom security checks. If the allocated physical frame number is untracked in the Page-Mark Table, HyperPS will first invokes the function mentioned above to format this allocated physical page. Then, HyperPS hooks the function \verb|kvm_mmu_get_page()|, the function \verb|link_shadow_page()|, and the function \verb|mmu_set_spte()| into the HyperPS Space.
+The function \verb|__direct_map()| in KVM is the core function to build new EPT entries. HyperPS places hooks inside this function to perform security checks. If the allocated physical frame number is untracked in the Page-Mark Table, HyperPS will first invoke the function mentioned above to format this allocated physical page. Then, HyperPS hooks the function \verb|kvm_mmu_get_page()|, the function \verb|link_shadow_page()|, and the function \verb|mmu_set_spte()| into the HyperPS Space.
 In the HyperPS Space, HyperPS will initialize a new EPT Paging-structure, and link it to the EPT.
 % and link it to the corresponding
 
@@ -478,7 +478,7 @@ Besides, HyperPS guarantees that virtual machines participating the memory shari
 Figure \ref{fig:impept} depicts the rough process of how HyperPS handles EPT Update. 
 As mentioned above, in this paper, in addition to changing the permissions of EPT entries, HyperPS also regards the allocation of a new EPT paging-structure as EPT Update. 
 In our prototype, we do not get involved in new physical memory page frame allocation, we focus on operations to EPTs only. 
-The function \verb|__direct_map()| in KVM is the core function to build new EPT entries. HyperPS places hooks inside this function to perfrom security checks. If the allocated physical frame number is untracked in the Page-Mark Table, HyperPS will first invokes the function mentioned above to format this allocated physical page. Then, HyperPS hooks the function \verb|kvm_mmu_get_page()|, the function \verb|link_shadow_page()|, and the function \verb|mmu_set_spte()| into the HyperPS Space.
+The function \verb|__direct_map()| in KVM is the core function to build new EPT entries. HyperPS places hooks inside this function to perform security checks. If the allocated physical frame number is untracked in the Page-Mark Table, HyperPS will first invoke the function mentioned above to format this allocated physical page. Then, HyperPS hooks the function \verb|kvm_mmu_get_page()|, the function \verb|link_shadow_page()|, and the function \verb|mmu_set_spte()| into the HyperPS Space.
 In the HyperPS Space, HyperPS will initialize a new EPT paging-structure, and link it the EPT.
 % and link it to the corresponding
 \fi

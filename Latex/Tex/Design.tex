@@ -188,8 +188,12 @@ In the HyperPS Space, HyperPS intercepts the address mapping function about I/O.
 
 HyperPS has removed EPTs and VMCSes from the original Hypervisor space, and functions about accessing and updating them have also been hooked into the HyperPS Space. 
 The HostOS/Hypervisor has already been deprived of privileges of managing the physical memory directly. Actually, the HostOS/Hypervisor can not access EPTs and VMCSes with regular memory access instructions or DMA instructions. 
-However, the HostOS/Hypervisor could still retrieve details about EPTs and VMCSes through legal functions. 
-The attacker can also tamper with EPT Paging-structures and VMCS fields with malicious input to these hooked functions.
+However, the 
+\iffalse 
+HostOS/Hypervisor could still retrieve details about EPTs and VMCSes through legal functions. 
+The 
+\fi 
+attacker can also tamper with EPT Paging-structures and VMCS fields with malicious input to these hooked functions.
 In this paper, HyperPS present two tables : Page-Mark Table and VM-Mark Table, to tag the mapping relations between the physical memory page frames and the virtual machines. Page-Mark Table consists of Page-Mark structure, while VM-Mark Table consists of VM-Mark structure.
 
 \subsubsection{EPTP Protection}%

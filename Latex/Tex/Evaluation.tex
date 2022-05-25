@@ -121,7 +121,7 @@ In our prototype, as depicted in Figure \ref{fig:address},
 HyperPS removed the corresponding page table entries that are relative to HyperPS page table base address, code and data. 
 The compromised HostOS can not accurately find this base address from the entire address space. 
 Direct access to the original addresses that are allocated to HyperPS in the Normal Space will fault because of Segment Fault.
-Besides, HyperPS also set the kernel code non-executable when the processor executes instructions in the HyprePS Space. This can prevent the attacker from exploiting kernel vulnerabilities in the HyperPS Space.
+Besides, HyperPS also set the kernel code non-executable when the processor executes instructions in the HyperPS Space. This can prevent the attacker from exploiting kernel vulnerabilities in the HyperPS Space.
 
 The attacker can also abuse control registers to crash HyperPS Space. 
 For example, the register \verb|CR0| controls the W$\oplus${X} privilege of code, the register \verb|CR4| controls if the SMEP mechanism is enabled or not. If an attacker takes over these control registers, he can crash HyperPS Space easily.
