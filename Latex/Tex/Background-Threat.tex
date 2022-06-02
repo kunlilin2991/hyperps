@@ -41,7 +41,7 @@ A compromised HostOS/hypervisor can force the guest virtual machine exit by tamp
 
 \subsubsection{EPT}%
 \label{ssub:ept}
-Intel implements its Second Level Address Translation (SLAT) as Extended Page Table (EPT). 
+Intel implements its second level address translation as Extended Page Table (EPT). 
 EPT allows each virtual machine to manage its page table (not the EPT), without giving access to the underlying host machine's MMU Hardware. Thus, EPT reduces the need for hypervisor to keep syncing the shadow pages eliminating the overhead.
 If EPT is enabled, guest-physical addresses are translated by traversing a set of EPT Paging-structures to produce physical addresses that are used to access memory.
 In addition to translating a guest-physical address to a physical address, EPT specifies the privileges that software is allowed when accessing the address. Attempts at disallowed accesses are called EPT violations and cause VM exits.

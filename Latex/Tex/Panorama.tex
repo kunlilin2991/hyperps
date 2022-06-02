@@ -73,7 +73,7 @@ Memory mapped pages are used for bulk transfer of data between QEMU and KVM. \ve
 Virtual-machine Control Structure is a data structure used in Virtual Machine eXtensions (VMX). It controls VMX non-root operations (guest virtual machine execution operations) and VMX transitions. Access to the VMCS is managed through the VMCS pointer (one per logical processor). The VMCS pointer is read and written suing the instructions \verb|VMPTRST| and \verb|VMPTRLD|. In general, the hypervisor configures a VMCS using \verb|VMREAD|, \verb|VMWRITE|, and \verb|VMCLEAR| instructions. A hypervisor could use a different VMCS for each virtual machine that it supports. For a virtual machine with multiple logical processor, the hypervisor could use a different for each logical processor. A logical processor may also maintain a number of VMCSs that are active, however, at any given time, at most one of the active VMCSs is the \textbf{current} VMCS. VMX instructions operate only on the \textbf{current} VMCS. 
 
 %这段写的不好，没有写出危害的具体内容，应该突出VMCS就是唯一的接口，VM的所有的行为都是在VMCS的instruct下的
-A compromised HostOS/hypervisor can force the guest virtual machine exit by tramper VM-Execution Control fields and VM-exit control fields in VMCS and tramper the guest virtual machine by writing Guest-State Area fields. 
+A compromised HostOS/hypervisor can force the guest virtual machine exit by tamper VM-Execution Control fields and VM-exit control fields in VMCS and tamper the guest virtual machine by writing Guest-State Area fields. 
 
 % 一个被危害的hypervisor可以强迫虚拟机退出，并通过篡改其vmcs中的field等信息实现对guest VM 的危害。
 
@@ -89,7 +89,7 @@ EPT allows each virtual machine to manage its page table (not the EPT), without 
 If EPT is enabled, guest-physical addresses are translated by traversing a set of EPT paging structures to produce physical addresses that are used to access memory.
 In addition to translating a guest-physical address to a physical address, EPT specifies the privileges that software is allowed when accessing the address. Attempts at disallowed accesses are called EPT violations and cause VM exits.
 
-A compromised HostOS/hypervisor could tramper EPT paging structures so that the virtual machine will execute arbitrary malicious code without knowing it. 
+A compromised HostOS/hypervisor could tamper EPT paging structures so that the virtual machine will execute arbitrary malicious code without knowing it. 
 Moreover, a compromised HostOS/Hypervisor could access any data in the guest virtual machine with the help of virtual machine introspection.
 
 

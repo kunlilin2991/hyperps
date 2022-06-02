@@ -112,18 +112,19 @@ Code Injection Attack & Inject code and cover hooked functions to bypass HyperPS
 
 \subsubsection{HyperPS Space Violation}%
 \label{ssub:hyperps_space_violation}
-HyperPS Space is a delicate kernel-level secure and isolated execution space that inherits HostOS's privileges of managing physical memory. 
+HyperPS Space is a delicate kernel-level secure and isolated execution space that inherits HostOS's privileges of managing physical memory. As listed in Table \ref{tab3}, the attacker can construct DMA attack or Code Injection Attack to tamper HostOS page tables.  
 In this paper, we implement HyperPS Space by using two sets of HostOS page tables and page-table-operation hooking.
 
-The first kind of attack attempts to use regular memory access to maliciously modify the page tables, including the dedicated HostOS kernel page table and the HyperPS Space page table.
-For example, if HyperPS exposes the HyperPS page table base address, then a compromised kernel can compromise the isolation by changing page table entries. Thus security tools in the HyperPS Space will be tampered with. 
+The first kind of attack attempts to use regular memory access to maliciously modify the page tables, including the dedicated HostOS kernel page table and the HyperPS Space page table. 
+For example, the attack can construct DMA attacks listed in Table \ref{tab3} to overwrite HostOS page tables.  
+if HyperPS exposes the HyperPS page table base address, then a compromised kernel can compromise the isolation by changing page table entries. Thus security tools in the HyperPS Space will be tampered with. 
 In our prototype, as depicted in Figure \ref{fig:address},
 HyperPS removed the corresponding page table entries that are relative to HyperPS page table base address, code and data. 
-The compromised HostOS can not accurately find this base address from the entire address space. 
-Direct access to the original addresses that are allocated to HyperPS in the Normal Space will fault because of Segment Fault.
+The compromised HostOS can not find this base address from the entire address space accurately. 
+Direct access (e.g., DMA attack) to the original addresses that are allocated to HyperPS in the Normal Space will fault because of Segment Fault.
 Besides, HyperPS also set the kernel code non-executable when the processor executes instructions in the HyperPS Space. This can prevent the attacker from exploiting kernel vulnerabilities in the HyperPS Space.
 
-The attacker can also abuse control registers to crash HyperPS Space. 
+The attacker can also abuse control registers to crash HyperPS Space. The attacker can inject malicious code (as listed in Table \ref{tab3}) to overwrite control registers.  
 For example, the register \verb|CR0| controls the W$\oplus${X} privilege of code, the register \verb|CR4| controls if the SMEP mechanism is enabled or not. If an attacker takes over these control registers, he can crash HyperPS Space easily.
 In our prototype, HyperPS has hooked all control-register-operation functions into HyperPS Space. Values that are written to control registers are supervised by HyperPS. HyperPS will reject any malicious modification.
 
@@ -236,8 +237,8 @@ The experiment results are list in Figure \ref{fig5}. As shown in this figure, f
 HyperPS introduced at most 3\% performance overhead. 
 However, there are still several benchmarks, such as mcf, astar and xalancbmk whose results are higher than average. 
 They caused a performance loss of 6\%. 
-Most of these workloads have large and fluctuating memory footprints. 
-It's not surprising as the HyperPS takes over physical memory management. Frequent memory request incurs HyperPS involvement to index the Page-Mark Table and verifies the legality of EPT Paging-structure updates.
+Most of these workloads test performance about large and fluctuating memory footprints. 
+It's not surprising that HyperPS incurs much more performance loss in these workloads, since the HyperPS takes over physical memory management, and requires context switch and security verification. Frequent memory request incurs HyperPS involvement to index the Page-Mark Table and verifies the legality of EPT Paging-structure updates.
 % handles Page-Mark structure and verifies the legality of page mapping when EPT updates.
 We can conclude that, for most compute-intensive applications without large memory footprints, HyperPS has a similar performance as the baseline cloud environment. 
 For applications with large memory footprints, 
@@ -311,7 +312,7 @@ set-pt is another benchmark that operates on EPT. HyperPS introduced about 4 per
 
 \begin{figure}[htpb]
     \centering
-    \includegraphics[width=0.9\linewidth]{./IMG/hyperbench.png}
+    \includegraphics[width=0.9\linewidth]{./IMG/hyperbench.pdf}
     \caption{Virtualization Performance Measurement Results using HyperBench}
     \label{fig:hyperbench}
 \end{figure}
